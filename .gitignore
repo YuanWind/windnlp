@@ -1,3 +1,5 @@
 projects/*
 !projects/0_example_project
+projects/EMCGCN-ASTE/data
+projects/EMCGCN-ASTE/outs
 !projects/EMCGCN-ASTE
