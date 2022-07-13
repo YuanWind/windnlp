@@ -1,2 +1,5 @@
 projects/*
 !projects/0_example_project
+projects/gaiic_ner/data
+projects/gaiic_ner/outs
+!projects/gaiic_ner
