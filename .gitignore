@@ -1,2 +1,3 @@
 projects/*
 !projects/0_example_project
+!projects/EMCGCN-ASTE
