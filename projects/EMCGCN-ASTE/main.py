@@ -11,12 +11,13 @@ sys.path.extend(['../../','./','../'])
 from scripts.main import run_init # 寻找可用的GPU
 import logging
 logger = logging.getLogger(__name__.replace('_', ''))
-
+import os
+import torch
 from scripts.evaluater import Evaluater, compute_objective
 from scripts.trainer import MyTrainer
 from transformers import AutoTokenizer, set_seed
 from scripts.config import MyConfigs, set_configs
-from scripts.utils import load_pkl
+from scripts.utils import dump_pkl, load_pkl
 from modules.data.datasets import ASTEDataset
 from modules.data.collators import Datacollator
 from modules.nn.emcgcn import EMCGCN
@@ -65,9 +66,15 @@ def build_data(config, test_insts = None, train_insts=None, dev_insts=None):
         
     
     tokenizer = AutoTokenizer.from_pretrained(config.pretrain_model_path)
-    train_set = ASTEDataset(config, vocab.train_insts, tokenizer, vocab, data_type = 'train', convert_here=not config.convert_features_in_run_time)
-    dev_set = ASTEDataset(config, vocab.dev_insts, tokenizer, vocab, data_type = 'dev',  convert_here=not config.convert_features_in_run_time)
-    test_set = ASTEDataset(config, vocab.test_insts, tokenizer, vocab, data_type = 'test',  convert_here=not config.convert_features_in_run_time)
+    dataset_path = os.path.join(config.temp_dir, 'dataset.pkl')
+    if not os.path.exists(dataset_path) or not config.load_dataset_from_pkl:
+        train_set = ASTEDataset(config, vocab.train_insts, tokenizer, vocab, data_type = 'train', convert_here=not config.convert_features_in_run_time)
+        dev_set = ASTEDataset(config, vocab.dev_insts, tokenizer, vocab, data_type = 'dev',  convert_here=not config.convert_features_in_run_time)
+        test_set = ASTEDataset(config, vocab.test_insts, tokenizer, vocab, data_type = 'test',  convert_here=not config.convert_features_in_run_time)
+        if not config.convert_features_in_run_time: 
+            dump_pkl((train_set,dev_set, test_set), dataset_path)
+    else:
+        train_set,dev_set, test_set = load_pkl(dataset_path)
     data_collator = Datacollator(config, vocab, tokenizer, ASTEDataset.convert_to_features, convert_here=config.convert_features_in_run_time)
     Evaluater.vocab = vocab
     Evaluater.tokenizer = tokenizer
@@ -95,7 +102,7 @@ def hp_space(trial):
             
     logger.info(f'搜索的超参为：{MyConfigs.hp_search_names}')
     return search_space      
- 
+
 def train_main():   # sourcery skip: extract-duplicate-method
     config = set_configs('projects/EMCGCN-ASTE/main.cfg')
     set_seed(config.seed)

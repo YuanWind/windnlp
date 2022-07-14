@@ -10,6 +10,8 @@ from lib2to3.pytree import Base
 import logging
 from typing import Dict
 
+from tqdm import tqdm
+
 from scripts.utils import token_index2char_index
 logger = logging.getLogger(__name__.replace('_', ''))
 from torch.utils.data import Dataset
@@ -37,7 +39,7 @@ class BaseDataset(Dataset):
         self.tokenizer = tokenizer
         self.vocab = vocab
         # 将inst转化为特征后保存到features中，类型为List[Dict]
-        self.all_features = self.convert_to_features(insts) if convert_here else None
+        self.all_features = self.convert_to_features(config, insts, tokenizer, vocab) if convert_here else None
     
     @property
     def items(self):
@@ -119,10 +121,10 @@ class ASTEDataset(BaseDataset):
             
             words = inst['sentence']
             chars = ''.join(words)
-            labels = torch.ones(config.max_seq_len, config.max_seq_len).long() * vocab.label2id['PAD']
-            labels_symmetry = torch.ones(config.max_seq_len, config.max_seq_len).long() * vocab.label2id['PAD']
+            labels = torch.ones(config.max_seq_len, config.max_seq_len, dtype=torch.long) * vocab.label2id['PAD']
+            labels_symmetry = torch.ones(config.max_seq_len, config.max_seq_len, dtype=torch.long) * vocab.label2id['PAD']
             word_pair_position, word_pair_deprel, word_pair_pos, word_pair_synpost = \
-                [torch.zeros(config.max_seq_len, config.max_seq_len).long() for _ in range(4)] 
+                [torch.zeros(config.max_seq_len, config.max_seq_len, dtype=torch.long) for _ in range(4)] 
             
             
             token_range = token_index2char_index(token_features[idx].offsets)
@@ -134,8 +136,8 @@ class ASTEDataset(BaseDataset):
                 opinion_span = get_spans(opinion)
                 '''set tag for aspect'''
                 for l, r in aspect_span:
-                    start = token_range[l][0]
-                    end = token_range[r][1]
+                    start = token_range.get(l, (0,0))[0]
+                    end = token_range.get(r, (0,0))[1]
                     for i in range(start, end+1):
                         for j in range(i, end+1):
                             if j == start:
@@ -145,17 +147,17 @@ class ASTEDataset(BaseDataset):
                             else:
                                 labels[i][j] = vocab.label2id['A']
 
-                    for i in range(l, r+1):
-                        set_tag = 1 if i == l else 2
-                        al, ar = token_range[i]
-                        '''mask positions of sub words'''
-                        labels[al+1:ar+1, :] = vocab.label2id.get('PAD')
-                        labels[:, al+1:ar+1] = vocab.label2id.get('PAD')
+                    # for i in range(l, r+1):
+                    #     set_tag = 1 if i == l else 2
+                    #     al, ar = token_range.get(i, (0,0))
+                    #     '''mask positions of sub words'''
+                    #     labels[al+1:ar+1, :] = vocab.label2id.get('PAD')
+                    #     labels[:, al+1:ar+1] = vocab.label2id.get('PAD')
 
                 '''set tag for opinion'''
                 for l, r in opinion_span:
-                    start = token_range[l][0]
-                    end = token_range[r][1]
+                    start = token_range.get(l, (0,0))[0]
+                    end = token_range.get(r, (0,0))[1]
                     for i in range(start, end+1):
                         for j in range(i, end+1):
                             if j == start:
@@ -165,18 +167,18 @@ class ASTEDataset(BaseDataset):
                             else:
                                 labels[i][j] = vocab.label2id['O']
 
-                    for i in range(l, r+1):
-                        set_tag = 1 if i == l else 2
-                        pl, pr = token_range[i]
-                        labels[pl+1:pr+1, :] = vocab.label2id.get('PAD')
-                        labels[:, pl+1:pr+1] = vocab.label2id.get('PAD')
+                    # for i in range(l, r+1):
+                    #     set_tag = 1 if i == l else 2
+                    #     pl, pr = token_range.get(i, (0,0))
+                    #     labels[pl+1:pr+1, :] = vocab.label2id.get('PAD')
+                    #     labels[:, pl+1:pr+1] = vocab.label2id.get('PAD')
 
                 for al, ar in aspect_span:
                     for pl, pr in opinion_span:
                         for i in range(al, ar+1):
                             for j in range(pl, pr+1):
-                                sal, sar = token_range[i]
-                                spl, spr = token_range[j]
+                                sal, sar = token_range.get(i, (0,0))
+                                spl, spr = token_range.get(j, (0,0))
                                 labels[sal:sar+1, spl:spr+1] = vocab.label2id.get('PAD')
                                 if i > j:
                                     labels[spl][sal] = vocab.label2id[triple['sentiment']]
@@ -191,31 +193,31 @@ class ASTEDataset(BaseDataset):
             postag, deprel, head = get_token_pos_dep(words, inst['postag'], inst['deprel'], inst['head'])
             '''1. generate position index of the word pair'''
             for i in range(length):
-                start, end = token_range[i][0], token_range[i][1]
+                start, end = token_range.get(i, (0,0))[0], token_range.get(i, (0,0))[1]
                 for j in range(length):
-                    s, e = token_range[j][0], token_range[j][1]
-                    for row in range(start, end + 1):
-                        for col in range(s, e + 1):
+                    s, e = token_range.get(j, (0,0))[0], token_range.get(j, (0,0))[1]
+                    for row in range(start, end):
+                        for col in range(s, e):
                             word_pair_position[row][col] = vocab.post2id.get(abs(row - col), vocab.post2id.get('UNK'))
             
             """2. generate deprel index of the word pair"""
             for i in range(length):
-                start = token_range[i][0]
-                end = token_range[i][1]
-                for j in range(start, end + 1):
-                    s, e = token_range[head[i] - 1] if head[i] != 0 else (0, 0)
-                    for k in range(s, e + 1):
+                start = token_range.get(i, (0,0))[0]
+                end = token_range.get(i, (0,0))[1]
+                for j in range(start, end):
+                    s, e = token_range.get(head[i] - 1, (0,0)) if head[i] != 0 else (0, 0)
+                    for k in range(s, e):
                         word_pair_deprel[j][k] = vocab.deprel2id.get(deprel[i])
                         word_pair_deprel[k][j] = vocab.deprel2id.get(deprel[i])
                         word_pair_deprel[j][j] = vocab.deprel2id.get('self')
             
             """3. generate POS tag index of the word pair"""
             for i in range(length):
-                start, end = token_range[i][0], token_range[i][1]
+                start, end = token_range.get(i, (0,0))[0], token_range.get(i, (0,0))[1]
                 for j in range(length):
-                    s, e = token_range[j][0], token_range[j][1]
-                    for row in range(start, end + 1):
-                        for col in range(s, e + 1):
+                    s, e = token_range.get(j, (0,0))[0], token_range.get(j, (0,0))[1]
+                    for row in range(start, end):
+                        for col in range(s, e):
                             word_pair_pos[row][col] = vocab.postag2id.get(tuple(sorted([postag[i], postag[j]])))
                             
             """4. generate synpost index of the word pair"""
@@ -253,11 +255,11 @@ class ASTEDataset(BaseDataset):
                                     node_set.add(g)
             
             for i in range(length):
-                start, end = token_range[i][0], token_range[i][1]
+                start, end = token_range.get(i, (0,0))[0], token_range.get(i, (0,0))[1]
                 for j in range(length):
-                    s, e = token_range[j][0], token_range[j][1]
-                    for row in range(start, end + 1):
-                        for col in range(s, e + 1):
+                    s, e = token_range.get(j, (0,0))[0], token_range.get(j, (0,0))[1]
+                    for row in range(start, end):
+                        for col in range(s, e):
                             word_pair_synpost[row][col] = vocab.syn_post2id.get(word_level_degree[i][j], vocab.syn_post2id['UNK'])
         
                 
@@ -273,6 +275,8 @@ class ASTEDataset(BaseDataset):
                 'labels_symmetry': labels_symmetry
             }
             features.append(one_feature)
+        
+        
         return features
 
 

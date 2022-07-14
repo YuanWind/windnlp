@@ -336,7 +336,7 @@ def get_tensor_device(tensor):
         return 'cpu'
     
     
-def token_index2char_index(offsets):
+def token_index2char_index(offsets, pad_token_idx = 0):
     """根据token下标到单词下标的映射，推导单词对应的token位置
     TODO: 如果某个字符没有对应的token怎么办？
 
@@ -346,9 +346,14 @@ def token_index2char_index(offsets):
     Returns:
         dict: 单词对应的token位置
     """
+    char_no_token = set()
     word_idx2token_idx = {}
+    pre_char_idx = 0
     for token_idx, word_pos in enumerate(offsets):
         s, t = word_pos # token 对应的 word 起始和结束位置
+        if s != pre_char_idx:
+            for i in range(pre_char_idx, s):
+                word_idx2token_idx[s] = pad_token_idx
         if t-s == 0: # 特殊的token，无对应的字符
             continue
         if t-s == 1: # 一个token对应一个word，反过来一个word对应一个token
@@ -356,4 +361,5 @@ def token_index2char_index(offsets):
         else: # 一个token对应多个word，反过来每个word都对应同一个token
             for i in range(s,t):
                 word_idx2token_idx[i] = (token_idx, token_idx+1)
+                
     return word_idx2token_idx

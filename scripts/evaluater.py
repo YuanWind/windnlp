@@ -35,7 +35,7 @@ class Evaluater:
         
         eval_res = Evaluater.res
         res_file_path = Evaluater.config.dev_pred_file if Evaluater.stage == 'dev' else Evaluater.config.test_pred_file
-        dump_json(eval_res,res_file_path)
+        # dump_json(eval_res,res_file_path)
         return_res = eval_BIO(eval_res)
         logger.info(json.dumps(return_res,indent=4))
         # reset 

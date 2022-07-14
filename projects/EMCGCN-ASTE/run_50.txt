@@ -1,0 +1,191 @@
+nohup: ignoring input
+ 该程序最多可建立1个线程。
+ CUDA_VISIBLE_DEVICES=5，将使用 5 卡。
+2022-07-14 19:53:02 scripts.config INFO: ------------  Process ID 102925, Process Parent ID 75730  --------------------
+
+2022-07-14 19:53:02 scripts.config INFO: Loaded config file from projects/EMCGCN-ASTE/main.cfg sucessfully.
+2022-07-14 19:53:02 scripts.config INFO: Write this config to projects/EMCGCN-ASTE/outs/debug/main.cfg sucessfully.
+2022-07-14 19:53:02 scripts.config INFO: 
+output_dir = projects/EMCGCN-ASTE/outs/debug
+resume_from_checkpoint = None
+num_train_epochs = 50
+early_stop_mode = -1
+do_train = True
+do_eval = True
+do_predict = False
+evaluation_strategy = epoch
+eval_steps = 100
+per_device_train_batch_size = 16
+gradient_accumulation_steps = 1
+per_device_eval_batch_size = 16
+eval_accumulation_steps = 1
+seed = 42
+fp16 = True
+no_cuda = False
+load_best_model_at_end = True
+metric_for_best_model = f_triplets_utm
+greater_is_better = True
+label_names = ['labels']
+label_smoothing_factor = 0.0
+adversarival_type = None
+adv_start_steps = 0
+emb_name = emb
+fgm_e = 0.3
+pgd_e = 0.3
+pgd_a = 0.3
+pgd_k = 3
+awp_a = 1.0
+awp_e = 0.01
+apw_k = 1
+awp_param = weight
+other_tricks = []
+ema_start_steps = 9000
+ema_decay = 0.999
+swa_start = 17000
+swa_lr = 5e-06
+swa_freq = 200
+lookahead_alpha = 0.8
+lookahead_k = 5
+dataloader_pin_memory = True
+dataloader_num_workers = 8
+learning_rate = 2e-05
+weight_decay = 0.0
+adam_beta1 = 0.9
+adam_beta2 = 0.999
+adam_epsilon = 1e-08
+max_grad_norm = 1.0
+lr_scheduler_type = linear
+warmup_ratio = 0.0
+warmup_steps = 0
+logging_strategy = steps
+logging_first_step = False
+logging_steps = 100
+logging_nan_inf_filter = True
+disable_tqdm = False
+report_to = ['tensorboard']
+skip_memory_metrics = True
+optim = adamw_hf
+adafactor = False
+save_strategy = epoch
+save_steps = 100
+save_total_limit = 1
+save_on_each_node = False
+gradient_checkpointing = False
+convert_features_in_run_time = True
+postfix = debug
+temp_dir = projects/EMCGCN-ASTE/outs/debug/temp_dir
+best_model_file = projects/EMCGCN-ASTE/outs/debug/best_model/best.pt
+log_file = projects/EMCGCN-ASTE/outs/debug/log_debug.txt
+dev_pred_file = projects/EMCGCN-ASTE/outs/debug/temp_dir/dev_pred_file.json
+test_pred_file = projects/EMCGCN-ASTE/outs/debug/temp_dir/test_pred_file.json
+save_dataset = False
+load_dataset_from_pkl = False
+do_hp_search = False
+hp_search_name = []
+max_trials = 10
+bert_feature_dim = 768
+emb_dropout = 0.5
+gcn_dim = 300
+num_layers = 1
+pooling = avg
+symmetry_decoding = False
+relation_constraint = True
+task = triplet
+vocab_file = projects/EMCGCN-ASTE/data/vocab.pkl
+train_data_repeat = -1
+add_dev_data_to_train = False
+pretrain_model_path = bert-base-chinese
+max_seq_len = 102
+max_train_num = 20000
+max_dev_num = -1
+
+loading configuration file https://huggingface.co/bert-base-chinese/resolve/main/config.json from cache at /data/yywind/transformers_cache/6cc404ca8136bc87bae0fb24f2259904943d776a6c5ddc26598bbdc319476f42.0f9bcd8314d841c06633e7b92b04509f1802c16796ee67b0f1177065739e24ae
+Model config BertConfig {
+  "architectures": [
+    "BertForMaskedLM"
+  ],
+  "attention_probs_dropout_prob": 0.1,
+  "classifier_dropout": null,
+  "directionality": "bidi",
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 768,
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "layer_norm_eps": 1e-12,
+  "max_position_embeddings": 512,
+  "model_type": "bert",
+  "num_attention_heads": 12,
+  "num_hidden_layers": 12,
+  "pad_token_id": 0,
+  "pooler_fc_size": 768,
+  "pooler_num_attention_heads": 12,
+  "pooler_num_fc_layers": 3,
+  "pooler_size_per_head": 128,
+  "pooler_type": "first_token_transform",
+  "position_embedding_type": "absolute",
+  "transformers_version": "4.17.0",
+  "type_vocab_size": 2,
+  "use_cache": true,
+  "vocab_size": 21128
+}
+
+loading weights file https://huggingface.co/bert-base-chinese/resolve/main/pytorch_model.bin from cache at /data/yywind/transformers_cache/58592490276d9ed1e8e33f3c12caf23000c22973cb2b3218c641bd74547a1889.fabda197bfe5d6a318c2833172d6757ccc7e49f692cb949a6fabf560cee81508
+Some weights of the model checkpoint at bert-base-chinese were not used when initializing BertModel: ['cls.seq_relationship.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.decoder.weight', 'cls.seq_relationship.weight', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.bias', 'cls.predictions.bias', 'cls.predictions.transform.LayerNorm.bias']
+- This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+All the weights of BertModel were initialized from the model checkpoint at bert-base-chinese.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use BertModel for predictions without further training.
+Using amp half precision backend
+2022-07-14 19:53:36 main INFO: Reinit Model and start training...
+
+
+loading configuration file https://huggingface.co/bert-base-chinese/resolve/main/config.json from cache at /data/yywind/transformers_cache/6cc404ca8136bc87bae0fb24f2259904943d776a6c5ddc26598bbdc319476f42.0f9bcd8314d841c06633e7b92b04509f1802c16796ee67b0f1177065739e24ae
+Model config BertConfig {
+  "architectures": [
+    "BertForMaskedLM"
+  ],
+  "attention_probs_dropout_prob": 0.1,
+  "classifier_dropout": null,
+  "directionality": "bidi",
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 768,
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "layer_norm_eps": 1e-12,
+  "max_position_embeddings": 512,
+  "model_type": "bert",
+  "num_attention_heads": 12,
+  "num_hidden_layers": 12,
+  "pad_token_id": 0,
+  "pooler_fc_size": 768,
+  "pooler_num_attention_heads": 12,
+  "pooler_num_fc_layers": 3,
+  "pooler_size_per_head": 128,
+  "pooler_type": "first_token_transform",
+  "position_embedding_type": "absolute",
+  "transformers_version": "4.17.0",
+  "type_vocab_size": 2,
+  "use_cache": true,
+  "vocab_size": 21128
+}
+
+loading weights file https://huggingface.co/bert-base-chinese/resolve/main/pytorch_model.bin from cache at /data/yywind/transformers_cache/58592490276d9ed1e8e33f3c12caf23000c22973cb2b3218c641bd74547a1889.fabda197bfe5d6a318c2833172d6757ccc7e49f692cb949a6fabf560cee81508
+Some weights of the model checkpoint at bert-base-chinese were not used when initializing BertModel: ['cls.seq_relationship.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.decoder.weight', 'cls.seq_relationship.weight', 'cls.predictions.transform.LayerNorm.weight', 'cls.predictions.transform.dense.bias', 'cls.predictions.bias', 'cls.predictions.transform.LayerNorm.bias']
+- This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+All the weights of BertModel were initialized from the model checkpoint at bert-base-chinese.
+If your task is similar to the task the model of the checkpoint was trained on, you can already use BertModel for predictions without further training.
+/home/wind/miniconda3/envs/uer/lib/python3.7/site-packages/transformers/optimization.py:309: FutureWarning: This implementation of AdamW is deprecated and will be removed in a future version. Use the PyTorch implementation torch.optim.AdamW instead, or set `no_deprecation_warning=True` to disable this warning
+  FutureWarning,
+***** Running training *****
+  Num examples = 20000
+  Num Epochs = 50
+  Instantaneous batch size per device = 16
+  Total train batch size (w. parallel, distributed & accumulation) = 16
+  Gradient Accumulation steps = 1
+  Total optimization steps = 62500
+  0%|          | 0/62500 [00:00<?, ?it/s]  0%|          | 1/62500 [00:04<76:54:01,  4.43s/it]/home/wind/miniconda3/envs/uer/lib/python3.7/site-packages/transformers/trainer.py:1445: FutureWarning: Non-finite norm encountered in torch.nn.utils.clip_grad_norm_; continuing anyway. Note that the default behavior will change in a future release to error out if a non-finite total norm is encountered. At that point, setting error_if_nonfinite=false will be required to retain the old behavior.
+  args.max_grad_norm,
+  0%|          | 2/62500 [00:04<36:58:28,  2.13s/it]  0%|          | 3/62500 [00:05<21:46:04,  1.25s/it]  0%|          | 4/62500 [00:05<15:09:57,  1.14it/s]  0%|          | 5/62500 [00:05<10:48:38,  1.61it/s]  0%|          | 6/62500 [00:05<8:40:11,  2.00it/s]   0%|          | 7/62500 [00:06<7:28:25,  2.32it/s]  0%|          | 8/62500 [00:06<6:36:15,  2.63it/s]  0%|          | 9/62500 [00:06<6:01:45,  2.88it/s]  0%|          | 10/62500 [00:06<5:31:43,  3.14it/s]  0%|          | 11/62500 [00:07<5:24:05,  3.21it/s]  0%|          | 12/62500 [00:07<4:37:59,  3.75it/s]  0%|          | 13/62500 [00:07<4:44:45,  3.66it/s]  0%|          | 14/62500 [00:07<4:24:32,  3.94it/s]  0%|          | 15/62500 [00:08<4:25:37,  3.92it/s]  0%|          | 16/62500 [00:08<4:35:24,  3.78it/s]  0%|          | 17/62500 [00:08<4:09:57,  4.17it/s]  0%|          | 18/62500 [00:08<4:26:16,  3.91it/s]  0%|          | 19/62500 [00:09<4:07:56,  4.20it/s]  0%|          | 20/62500 [00:09<4:19:21,  4.01it/s]  0%|          | 21/62500 [00:09<4:24:02,  3.94it/s]  0%|          | 22/62500 [00:09<4:18:04,  4.03it/s]  0%|          | 23/62500 [00:10<4:37:37,  3.75it/s]  0%|          | 24/62500 [00:10<4:08:20,  4.19it/s]  0%|          | 25/62500 [00:10<4:23:59,  3.94it/s]  0%|          | 26/62500 [00:10<4:07:11,  4.21it/s]  0%|          | 27/62500 [00:11<4:05:27,  4.24it/s]  0%|          | 28/62500 [00:11<4:25:32,  3.92it/s]  0%|          | 29/62500 [00:11<3:59:21,  4.35it/s]  0%|          | 30/62500 [00:11<4:20:35,  4.00it/s]  0%|          | 31/62500 [00:12<4:08:04,  4.20it/s]  0%|          | 32/62500 [00:12<3:38:06,  4.77it/s]  0%|          | 33/62500 [00:12<3:52:27,  4.48it/s]  0%|          | 34/62500 [00:12<4:05:24,  4.24it/s]  0%|          | 35/62500 [00:13<4:04:33,  4.26it/s]  0%|          | 36/62500 [00:13<4:25:52,  3.92it/s]  0%|          | 37/62500 [00:13<3:55:42,  4.42it/s]  0%|          | 38/62500 [00:21<45:13:19,  2.61s/it]  0%|          | 39/62500 [00:21<33:12:27,  1.91s/it]  0%|          | 40/62500 [00:22<24:07:24,  1.39s/it]  0%|          | 41/62500 [00:22<18:26:08,  1.06s/it]  0%|          | 42/62500 [00:22<14:10:00,  1.22it/s]  0%|          | 43/62500 [00:22<11:20:31,  1.53it/s]  0%|          | 44/62500 [00:23<9:18:44,  1.86it/s]   0%|          | 45/62500 [00:23<7:50:27,  2.21it/s]  0%|          | 46/62500 [00:23<7:02:40,  2.46it/s]  0%|          | 47/62500 [00:23<5:42:30,  3.04it/s]  0%|          | 48/62500 [00:24<5:26:17,  3.19it/s]  0%|          | 49/62500 [00:24<5:16:30,  3.29it/s]  0%|          | 50/62500 [00:24<5:09:13,  3.37it/s]  0%|          | 51/62500 [00:24<4:58:52,  3.48it/s]  0%|          | 52/62500 [00:25<4:19:12,  4.02it/s]  0%|          | 53/62500 [00:25<4:33:54,  3.80it/s]  0%|          | 54/62500 [00:25<4:17:56,  4.03it/s]  0%|          | 55/62500 [00:25<4:22:48,  3.96it/s]  0%|          | 56/62500 [00:26<4:31:12,  3.84it/s]  0%|          | 57/62500 [00:26<4:22:19,  3.97it/s]  0%|          | 58/62500 [00:26<4:35:48,  3.77it/s]  0%|          | 59/62500 [00:26<3:56:27,  4.40it/s]  0%|          | 60/62500 [00:27<4:11:06,  4.14it/s]  0%|          | 61/62500 [00:27<4:18:09,  4.03it/s]  0%|          | 62/62500 [00:27<4:13:01,  4.11it/s]  0%|          | 63/62500 [00:27<4:31:27,  3.83it/s]  0%|          | 64/62500 [00:28<4:01:17,  4.31it/s]  0%|          | 65/62500 [00:28<4:18:24,  4.03it/s]  0%|          | 66/62500 [00:28<4:06:58,  4.21it/s]  0%|          | 67/62500 [00:28<4:13:32,  4.10it/s]  0%|          | 68/62500 [00:29<4:29:54,  3.86it/s]  0%|          | 69/62500 [00:29<4:08:44,  4.18it/s]  0%|          | 70/62500 [00:29<4:24:57,  3.93it/s]  0%|          | 71/62500 [00:29<4:05:08,  4.24it/s]  0%|          | 72/62500 [00:30<4:19:03,  4.02it/s]  0%|          | 73/62500 [00:30<4:23:47,  3.94it/s]  0%|          | 74/62500 [00:30<4:01:01,  4.32it/s]  0%|          | 75/62500 [00:30<4:19:01,  4.02it/s]  0%|          | 76/62500 [00:31<4:04:03,  4.26it/s]  0%|          | 77/62500 [00:31<4:13:17,  4.11it/s]  0%|          | 78/62500 [00:31<4:23:12,  3.95it/s]  0%|          | 79/62500 [00:31<3:57:57,  4.37it/s]  0%|          | 80/62500 [00:32<4:17:19,  4.04it/s]  0%|          | 81/62500 [00:32<4:09:39,  4.17it/s]  0%|          | 82/62500 [00:32<4:21:58,  3.97it/s]  0%|          | 83/62500 [00:32<4:21:48,  3.97it/s]  0%|          | 84/62500 [00:32<4:01:52,  4.30it/s]  0%|          | 85/62500 [00:40<42:36:06,  2.46s/it]  0%|          | 86/62500 [00:40<31:26:27,  1.81s/it]  0%|          | 87/62500 [00:41<22:56:40,  1.32s/it]  0%|          | 88/62500 [00:41<17:29:01,  1.01s/it]  0%|          | 89/62500 [00:41<13:37:32,  1.27it/s]  0%|          | 90/62500 [00:41<10:56:55,  1.58it/s]  0%|          | 91/62500 [00:42<9:14:08,  1.88it/s]   0%|          | 92/62500 [00:42<7:48:37,  2.22it/s]  0%|          | 93/62500 [00:42<6:56:58,  2.49it/s]  0%|          | 94/62500 [00:42<5:51:43,  2.96it/s]  0%|          | 95/62500 [00:43<5:37:09,  3.08it/s]  0%|          | 96/62500 [00:43<4:53:51,  3.54it/s]  0%|          | 97/62500 [00:43<4:47:07,  3.62it/s]  0%|          | 98/62500 [00:43<4:48:17,  3.61it/s]  0%|          | 99/62500 [00:44<4:21:11,  3.98it/s]  0%|          | 100/62500 [00:44<4:32:41,  3.81it/s]                                                       0%|          | 100/62500 [00:44<4:32:41,  3.81it/s]  0%|          | 101/62500 [00:44<4:10:25,  4.15it/s]  0%|          | 102/62500 [00:44<4:24:01,  3.94it/s]  0%|          | 103/62500 [00:45<4:25:31,  3.92it/s]  0%|          | 104/62500 [00:45<4:29:13,  3.86it/s]  0%|          | 105/62500 [00:45<4:34:53,  3.78it/s]  0%|          | 106/62500 [00:45<4:14:53,  4.08it/s]  0%|          | 107/62500 [00:46<4:29:50,  3.85it/s]  0%|          | 108/62500 [00:46<4:01:58,  4.30it/s]  0%|          | 109/62500 [00:46<4:09:04,  4.17it/s]  0%|          | 110/62500 [00:46<4:23:12,  3.95it/s]  0%|          | 111/62500 [00:47<3:55:19,  4.42it/s]  0%|          | 112/62500 [00:47<4:15:18,  4.07it/s]  0%|          | 113/62500 [00:47<4:05:37,  4.23it/s]  0%|          | 114/62500 [00:47<4:11:03,  4.14it/s]  0%|          | 115/62500 [00:48<4:23:12,  3.95it/s]  0%|          | 116/62500 [00:48<4:05:03,  4.24it/s]  0%|          | 117/62500 [00:48<4:30:27,  3.84it/s]  0%|          | 118/62500 [00:48<3:58:15,  4.36it/s]  0%|          | 119/62500 [00:49<4:15:48,  4.06it/s]  0%|          | 120/62500 [00:49<4:23:42,  3.94it/s]  0%|          | 121/62500 [00:49<4:25:15,  3.92it/s]  0%|          | 122/62500 [00:49<4:34:18,  3.79it/s]  0%|          | 123/62500 [00:50<4:17:35,  4.04it/s]  0%|          | 124/62500 [00:50<4:31:18,  3.83it/s]  0%|          | 125/62500 [00:50<4:05:09,  4.24it/s]  0%|          | 126/62500 [00:50<4:14:34,  4.08it/s]  0%|          | 127/62500 [00:51<4:27:47,  3.88it/s]  0%|          | 128/62500 [00:51<4:25:55,  3.91it/s]  0%|          | 129/62500 [00:51<4:37:56,  3.74it/s]  0%|          | 130/62500 [00:51<4:08:59,  4.17it/s]  0%|          | 131/62500 [00:52<4:23:17,  3.95it/s]  0%|          | 132/62500 [00:52<4:08:05,  4.19it/s]  0%|          | 133/62500 [00:52<4:17:57,  4.03it/s]  0%|          | 134/62500 [00:52<4:26:24,  3.90it/s]  0%|          | 135/62500 [00:53<4:01:49,  4.30it/s]  0%|          | 136/62500 [00:53<4:18:18,  4.02it/s]  0%|          | 137/62500 [00:53<4:09:05,  4.17it/s]  0%|          | 138/62500 [00:53<4:19:14,  4.01it/s]  0%|          | 139/62500 [00:54<4:24:16,  3.93it/s]  0%|          | 140/62500 [00:54<4:20:57,  3.98it/s]  0%|          | 141/62500 [00:54<4:35:32,  3.77it/s]  0%|          | 142/62500 [00:54<4:05:02,  4.24it/s]  0%|          | 143/62500 [00:55<4:22:28,  3.96it/s]  0%|          | 144/62500 [00:55<4:08:38,  4.18it/s]  0%|          | 145/62500 [00:55<4:15:00,  4.08it/s]  0%|          | 146/62500 [00:55<4:25:53,  3.91it/s]  0%|          | 147/62500 [00:56<4:02:13,  4.29it/s]  0%|          | 148/62500 [00:56<4:19:23,  4.01it/s]  0%|          | 149/62500 [01:03<41:32:04,  2.40s/it]  0%|          | 150/62500 [01:04<30:35:04,  1.77s/it]  0%|          | 151/62500 [01:04<22:26:21,  1.30s/it]  0%|          | 152/62500 [01:04<17:07:51,  1.01it/s]  0%|          | 153/62500 [01:04<13:22:24,  1.29it/s]  0%|          | 154/62500 [01:05<10:38:40,  1.63it/s]  0%|          | 155/62500 [01:05<9:01:10,  1.92it/s]   0%|          | 156/62500 [01:05<7:12:27,  2.40it/s]  0%|          | 157/62500 [01:05<6:33:08,  2.64it/s]  0%|          | 158/62500 [01:06<5:40:02,  3.06it/s]  0%|          | 159/62500 [01:06<5:20:48,  3.24it/s]  0%|          | 160/62500 [01:06<5:10:26,  3.35it/s]  0%|          | 161/62500 [01:06<4:37:03,  3.75it/s]
