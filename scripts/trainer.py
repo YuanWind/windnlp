@@ -331,7 +331,8 @@ class MyTrainer(Trainer):
         if labels_host is not None:
             labels = nested_numpify(labels_host)
 
-        Evaluater.steps_evaluate(preds_host=logits, inputs_host=inputs_decode, labels_host=labels)        
+        if preds_host is not None: # 如果还有剩下的没处理的
+            Evaluater.steps_evaluate(preds_host=logits, inputs_host=inputs_decode, labels_host=labels)        
         # Number of samples
         if has_length(eval_dataset):
             num_samples = len(eval_dataset)

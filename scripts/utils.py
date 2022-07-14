@@ -55,7 +55,7 @@ def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
                 handle = pynvml.nvmlDeviceGetHandleByIndex(i)
                 info = pynvml.nvmlDeviceGetMemoryInfo(handle)
                 if info.used < threshold_mem:  # 5G    
-                    logger.warning(f'GPU-{i} used {info.used/1000000} M, so the program will use GPU-{i}.') 
+                    logger.warning(f'GPU-{i} used {info.used/1000000:.1f} M, so the program will use GPU-{i}.') 
                     return i
             cur_time = time.time()
             during = int(cur_time-start)+1
