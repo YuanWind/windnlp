@@ -6,19 +6,16 @@
 @Desc    :   None
 '''
 from collections import defaultdict
-from lib2to3.pytree import Base
 import logging
 from typing import Dict
-
 from tqdm import tqdm
-
 from scripts.utils import token_index2char_index
 logger = logging.getLogger(__name__.replace('_', ''))
 from torch.utils.data import Dataset
 import torch
 import os
 import jieba
-
+from scripts.evaluater import find_triplet
 
 class BaseDataset(Dataset):
     def __init__(self, config, insts, tokenizer = None, vocab = None, data_type = 'train', convert_here = False):

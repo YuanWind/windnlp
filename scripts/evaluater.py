@@ -10,8 +10,7 @@ import json
 import logging
 import numpy as np
 import torch
-import torch.nn.functional as F
-from scripts.utils import dump_json, token_index2char_index
+from scripts.utils import dump_json
 logger = logging.getLogger(__name__.replace('_', ''))
 
 
@@ -35,8 +34,11 @@ class Evaluater:
         
         eval_res = Evaluater.res
         res_file_path = Evaluater.config.dev_pred_file if Evaluater.stage == 'dev' else Evaluater.config.test_pred_file
-        # dump_json(eval_res,res_file_path)
-        return_res = eval_BIO(eval_res)
+        dump_json(eval_res,res_file_path)
+        P,R,F = eval_BIO(eval_res)
+        P_bio,R_bio,F_bio = eval_BIO(eval_res, tp='0')
+        return_res = {'P':float(P),'R':float(R),'F1': float(F),
+                      'P_bio':float(P_bio),'R_bio':float(R_bio),'F1_bio': float(F_bio)} 
         logger.info(json.dumps(return_res,indent=4))
         # reset 
         Evaluater.res = []
@@ -50,148 +52,75 @@ class Evaluater:
         Evaluater.finished_idx += len(preds_host)
         end = Evaluater.finished_idx
         insts = Evaluater.vocab.dev_insts[start:end] if Evaluater.stage == 'dev' else Evaluater.vocab.test_insts[start:end]
-        tokenizer = Evaluater.tokenizer        
-        emcgcn_decode(scores, labels_host, insts, tokenizer)
-        Evaluater.res.extend(insts)
+        tokenizer = Evaluater.tokenizer
+        vocab = Evaluater.vocab
+        token_mappings = get_token_mappings(insts, tokenizer)
+        decoded_insts = decode_entities(insts, scores, token_mappings,vocab, threshold= Evaluater.config.threshold)
+        Evaluater.res.extend(decoded_insts)
+    
+        
+def get_token_mappings(insts, tokenizer):
+    token_mappings = []
+    for inst in insts:
+        tokens = tokenizer.tokenize(inst['text'])[:Evaluater.config.max_seq_len-2]
+        token_mapping = tokenizer.get_token_mapping(inst['text'], tokens)  # token_id -> word_idxs
+        token_mappings.append(token_mapping)
+    return token_mappings
 
-def eval_BIO(insts):
-    pred_aspect_spans,pred_opinion_spans,pred_triplets_utm = [], [], []
-    true_aspect_spans,true_opinion_spans,true_triplets_utm = [], [], []
-    for idx, inst in enumerate(insts):
-        pred_aspect_spans.extend([f'{idx}-{sp}' for sp in inst['pred_aspect_spans']])
-        pred_opinion_spans.extend([f'{idx}-{sp}' for sp in  inst['pred_opinion_spans']])
-        pred_triplets_utm.extend([f'{idx}-{sp}' for sp in  inst['pred_triplets_utm']])
-        true_aspect_spans.extend([f'{idx}-{sp}' for sp in  inst['true_aspect_spans']])
-        true_opinion_spans.extend([f'{idx}-{sp}' for sp in  inst['true_opinion_spans']])
-        true_triplets_utm.extend([f'{idx}-{sp}' for sp in  inst['true_triplets_utm']])
-    
-    def get_f(golden_set,predicted_set):
-        correct_num = len(golden_set & predicted_set)
-        precision = correct_num / len(predicted_set) if len(predicted_set) > 0 else 0
-        recall = correct_num / len(golden_set) if len(golden_set) > 0 else 0
-        f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
-        return precision, recall, f1
-    
-    p_aspect, r_aspect, f_aspect = get_f(set(true_aspect_spans), set(pred_aspect_spans))
-    p_opinion, r_opinion, f_opinion = get_f(set(true_opinion_spans), set(pred_opinion_spans))
-    p_triplets_utm, r_triplets_utm, f_triplets_utm = get_f(set(true_triplets_utm), set(pred_triplets_utm))
-    
-    res = {
-        'p_aspect' : p_aspect, 
-        'r_aspect' : r_aspect, 
-        'f_aspect' : f_aspect,
-        'p_opinion' : p_opinion, 
-        'r_opinion' : r_opinion, 
-        'f_opinion' : f_opinion,
-        'p_triplets_utm' : p_triplets_utm, 
-        'r_triplets_utm' : r_triplets_utm, 
-        'f_triplets_utm' : f_triplets_utm 
-    }
+def to_list(labels,prefix='', tp = None):
+    res = []
+    for l in labels:
+        res.append(f"{prefix}_{l['start_idx']}_{l['end_idx']}_{l['type'] if tp is None else tp}_{l['entity']}")
+    return res
+def to_set(labels,prefix=''): 
+    # sourcery skip: set-comprehension
+    res = set()
+    for l in labels:
+        res.add(f"{prefix}_{l['start_idx']}_{l['end_idx']}_{l['type']}_{l['entity']}")
     return res
 
-def emcgcn_decode(scores, labels, insts, tokenizer):
-    token_ranges = None
-    sentences = []
-    for inst in insts:
-        sentences.append(''.join(inst['sentence']))
-    token_features = tokenizer(sentences, return_offsets_mapping=True, add_special_tokens=True,
-                                padding = 'max_length', max_length = Evaluater.config.max_seq_len, return_tensors = 'pt')
-    token_ranges =  [token_index2char_index(token_features[idx].offsets) for idx in range(len(insts))]
-    preds = F.softmax(torch.tensor(scores, dtype=torch.float32), dim=-1)
-    preds = torch.argmax(preds, dim=3)
+def decode_entities(insts, scores, token_mappings,vocab, threshold=0): 
+    scores[:,:, [0, -1]] -= np.inf
+    scores[:,:, :, [0, -1]] -= np.inf
     
-    for idx, inst in enumerate(insts):
-        pred_aspect_spans,pred_opinion_spans,pred_triplets_utm = find_triplet(preds[idx], token_ranges[idx])
-        true_aspect_spans,true_opinion_spans,true_triplets_utm = find_triplet(torch.tensor(labels[idx], dtype=torch.long), token_ranges[idx])
-        inst['pred_aspect_spans'] = pred_aspect_spans
-        inst['pred_opinion_spans'] = pred_opinion_spans
-        inst['pred_triplets_utm'] = pred_triplets_utm
-        inst['true_aspect_spans'] = true_aspect_spans
-        inst['true_opinion_spans'] = true_opinion_spans
-        inst['true_triplets_utm'] = true_triplets_utm
-
-def find_triplet(tags, token_ranges):
-    # label2id = {'N': 0, 'B-A': 1, 'I-A': 2, 'A': 3, 'B-O': 4, 'I-O': 5, 'O': 6, 'negative': 7, 'neutral': 8, 'positive': 9}
-    neg_id = Evaluater.vocab.label2id.get('negative')
-    neu_id = Evaluater.vocab.label2id.get('neutral')
-    pos_id = Evaluater.vocab.label2id.get('positive')
-    triplets_utm = []
-    aspect_spans = get_aspects(tags, token_ranges, ignore_index=0)
-    opinion_spans = get_opinions(tags, token_ranges, ignore_index=0)
-    for al, ar in aspect_spans:
-        for pl, pr in opinion_spans:
-            tag_num = [0] * len(Evaluater.vocab.label2id)
-            for i in range(al, ar + 1):
-                for j in range(pl, pr + 1):
-                    a_start = token_ranges[i][0]
-                    o_start = token_ranges[j][0]
-                    if al < pl:
-                        tag_num[int(tags[a_start][o_start])] += 1
-                    else:
-                        tag_num[int(tags[o_start][a_start])] += 1
-
-            if sum([tag_num[neg_id],tag_num[neu_id],tag_num[pos_id]]) == 0: continue
-            sentiment = -1
-            if tag_num[pos_id] >= tag_num[neu_id] and tag_num[pos_id] >= tag_num[neg_id]:
-                sentiment = pos_id
-            elif tag_num[neu_id] >= tag_num[neg_id] and tag_num[neu_id] >= tag_num[pos_id]:
-                sentiment = neu_id
-            elif tag_num[neg_id] >= tag_num[pos_id] and tag_num[neg_id] >= tag_num[neu_id]:
-                sentiment = neg_id
-            if sentiment == -1:
-                print('wrong!!!!!!!!!!!!!!!!!!!!')
-                exit()
-            triplets_utm.append([al, ar, pl, pr, sentiment])
     
-    return aspect_spans,opinion_spans,triplets_utm
+    for idx,inst in enumerate(insts):
+        text = inst['text']
+        entities = []
+        token_mapping = token_mappings[idx]
+        for category, start, end in zip(*np.where(scores[idx] > threshold)):
+            if end-1 >= len(token_mapping):
+                break
+            if token_mapping[start-1][0] <= token_mapping[end-1][-1]:
+                entitie_ = {
+                    "start_idx": token_mapping[start-1][0],
+                    "end_idx": token_mapping[end-1][-1],
+                    "entity": text[token_mapping[start-1][0]: token_mapping[end-1][-1]+1],
+                    "type": vocab.id2label[category]
+                }
+                if entitie_['entity'] == '':
+                    continue
+                entities.append(entitie_)
+        
+        entities = sorted(entities, key=lambda entitie:entitie['start_idx']) # 根据 start_idx 排序
+        inst['pred_labels'] = entities
+        
+    return insts
+
+def eval_BIO(eval_res, tp = None):
+    epsilon = 1e-12
+    total_pred_entities, total_true_entities = [],[]
     
+    for idx, data in enumerate(eval_res):
+        
+        total_true_entities.extend(to_list(data['labels'], str(idx), tp = tp))
+        total_pred_entities.extend(to_list(data['pred_labels'], str(idx), tp = tp))
 
+            
+    total_pred_entities, total_true_entities = set(total_pred_entities), set(total_true_entities)
 
-def get_aspects(tags, token_range, ignore_index=0):
-    spans = []
-    start, end = -1, -1
-    length = len(token_range)
-    for i in range(length):
-        l, r = token_range[i]
-        if tags[l][l] == ignore_index:
-            continue
-        label = Evaluater.vocab.id2label[tags[l][l]]
-        if label == 'B-A':
-            if start != -1:
-                spans.append([start, end])
-            start, end = i, i
-        elif label == 'I-A':
-            end = i
-        else:
-            if start != -1:
-                spans.append([start, end])
-                start, end = -1, -1
-    if start != -1:
-        spans.append([start, length-1])
+    P = len(total_true_entities&total_pred_entities)/(len(total_pred_entities)+epsilon)
+    R = len(total_true_entities&total_pred_entities)/(len(total_true_entities)+epsilon)
     
-    return spans
-
-
-def get_opinions(tags, token_range, ignore_index=0):
-    spans = []
-    start, end = -1, -1
-    length = len(token_range)
-    for i in range(length):
-        l, r = token_range[i]
-        if tags[l][l] == ignore_index:
-            continue
-        label = Evaluater.vocab.id2label[tags[l][l]]
-        if label == 'B-O':
-            if start != -1:
-                spans.append([start, end])
-            start, end = i, i
-        elif label == 'I-O':
-            end = i
-        else:
-            if start != -1:
-                spans.append([start, end])
-                start, end = -1, -1
-    if start != -1:
-        spans.append([start, length-1])
-    
-    return spans
+    F = 2*P*R/(P+R+epsilon)
+    return P,R,F
