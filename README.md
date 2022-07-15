@@ -7,5 +7,5 @@
 
 
 ## 建立一个新项目的步骤
-1. 复制 projects/0_example_project目录，更改复制后的目录名作为新项目文件夹；
-2. 修改新项目文件夹下的preprocess.py和main.py, 作用分别是数据预处理和主函数。
+1. 修改 projects/0_example_project目录名作为新项目A；
+2. 修改新项目A文件夹下的preprocess.py和main.py, 作用分别是数据预处理和主函数。
