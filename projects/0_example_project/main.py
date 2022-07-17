@@ -1,5 +1,4 @@
 import sys
-from scripts.utils import set_seed
 sys.path.extend(['../../','./','../'])
 from scripts.main import run_init # 寻找可用的GPU
 import logging
@@ -7,6 +6,7 @@ logger = logging.getLogger(__name__.replace('_', ''))
 from scripts.evaluater import Evaluater, compute_objective
 from scripts.trainer import MyTrainer
 from scripts.config import MyConfigs, set_configs
+from scripts.utils import set_seed
 
 def build_model():
     pass
