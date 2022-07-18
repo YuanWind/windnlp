@@ -134,10 +134,12 @@ class MyConfigs():
             args (Namespace): args, extra_args 是 argparse.parse_known_args()的返回值
             extra_args (list): Defaults to None.
         """
+        self.global_dir_str = None
         if args is not None:
             args = vars(args)
-            
+           
         self.config_file = args.pop('config_file')
+
         
         config = ConfigParser(interpolation=ExtendedInterpolation())
         if self.config_file is not None:
@@ -164,14 +166,21 @@ class MyConfigs():
                     config.set('CMD',k,v)
                 for k,v in args.items():
                     config.set(section, k, v)
-                    
+         
         self._config = config
         
         sig = signature(MyTrainingArguments.__init__) # 获取 init 方法所有参数和其默认值
         self.trainer_args_dict ={k:v.default for k,v in sig.parameters.items() if k != 'self'}
         
+        # 获取global_dir_str
+        exist_global_dir = self.get_global_dir(config)
+            
+        # 按照config增加类成员变量
         for section in config.sections():
             for k, v in config.items(section):
+                if self.global_dir_str in v:
+                    v = v.replace(self.global_dir_str, exist_global_dir)
+                
                 v = self.get_type(v)
                 if k in self.trainer_args_dict:
                     self.trainer_args_dict[k] = v
@@ -184,6 +193,7 @@ class MyConfigs():
             logger.warning(f'Current System is Windows and dataloader_num_workers needs to be 0 but {self.dataloader_num_workers}.')
             self.set('dataloader_num_workers', 0)
             
+        
     def set(self,attr_name, attr_val):
         """
         更改或增加config的属性值
@@ -246,8 +256,30 @@ class MyConfigs():
         if not os.path.exists(self.log_file.rsplit('/', 1)[0]):
             os.makedirs(self.log_file.rsplit('/', 1)[0])
 
+    def get_global_dir(self, config):
         
-
+        for section in config.sections():
+            for k, v in config.items(section):
+                if k == 'global_dir':
+                    self.global_dir_str = v
+                    break
+            if self.global_dir_str is not None:
+                break
+        
+        res = None
+        if self.global_dir_str is None:
+            return None
+        for dir in self.get_type(self.global_dir_str):
+            if os.path.exists(dir):
+                res = dir
+                break
+        if res is None:
+            raise FileNotFoundError(f'None of {self.global_dir} exists.')
+        
+        return res
+        
+                
+                
     def save(self):
         logger.info(f'Loaded config file from {self.config_file} sucessfully.')
         self._config.write(open(f'{self.output_dir}/' + self.config_file.split('/')[-1], 'w'))
