@@ -1,5 +1,5 @@
 **/__pycache__
 projects/*
-projects/0_example_project/data
-projects/0_example_project/outs
-!projects/0_example_project
+projects/RRG/data
+projects/RRG/outs
+!projects/RRG
