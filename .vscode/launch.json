@@ -19,6 +19,17 @@
 			"program": "projects/RRG/main.py",
 			"console": "integratedTerminal",
 			"justMyCode": false
+		},
+		{
+			"name": "Python: main-chinese",
+			"type": "python",
+			"request": "launch",
+			"program": "projects/RRG/main.py",
+			"args": [
+				"--config_file", "projects/RRG/main_chinese.cfg"
+			],
+			"console": "integratedTerminal",
+			"justMyCode": false
 		}
 	]
 }

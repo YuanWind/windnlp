@@ -61,6 +61,9 @@ def build_data(config, test_insts = None, train_insts=None, dev_insts=None):
         
     tokenizer = AutoTokenizer.from_pretrained(config.pretrained_model_name_or_path)
     config.set('vocab_size', tokenizer.vocab_size)
+    config.set('pad_token_id', tokenizer.pad_token_id)
+    config.set('bos_token_id', tokenizer.cls_token_id)
+    config.set('eos_token_id', tokenizer.sep_token_id)
     train_set = RRGDataset(config, vocab.train_insts, tokenizer, vocab, data_type='train', convert_here=not config.convert_features_in_run_time)
     dev_set = RRGDataset(config, vocab.dev_insts, tokenizer, vocab, data_type='dev', convert_here=not config.convert_features_in_run_time)
     test_set = RRGDataset(config, vocab.test_insts, tokenizer, vocab, data_type='test', convert_here=not config.convert_features_in_run_time)
