@@ -19,6 +19,8 @@ class MyTrainer(Trainer):
         self.current_step = 0
         self.early_stop_mode = self.config.early_stop_mode # -1代表关闭，0代表连续评测四次没提升就停止，>0的数字代表具体的哪一轮停止
         self.early_stop_counter = 0
+        self.use_swa = False
+        self.use_lookahead = False
         
     def loss_backward(self,loss):
         """
@@ -36,62 +38,62 @@ class MyTrainer(Trainer):
             loss.backward()
     
     
-    def create_optimizer(self):
-        """
-        设置分层学习率
-        """
+    # def create_optimizer(self):
+    #     """
+    #     设置分层学习率
+    #     """
         
             
-        if self.optimizer is None:
-            parameters_names = get_parameter_names(self.model, [nn.LayerNorm])
-            decay_parameters = [name for name in parameters_names if "bias" not in name]
-            special_lr_params = [name for name in parameters_names if "bert" not in name]
-            optimizer_grouped_parameters = [{"params": [],"weight_decay":0.0}]
-            special_grouped_parameters = []
-            for n, p in self.model.named_parameters():
-                if n in decay_parameters:
-                    param = {"params": [p], "weight_decay": self.args.weight_decay}
-                    if n in special_lr_params:
-                        param["lr"] = 1e-3
-                    special_grouped_parameters.append(param)
-                elif n in special_lr_params:
-                    param = {"params": [p], "lr": 1e-3}
-                    special_grouped_parameters.append(param)
-                else:
-                    optimizer_grouped_parameters[0]["params"].append(p)
-            optimizer_grouped_parameters += special_grouped_parameters
-            optimizer_cls, optimizer_kwargs = Trainer.get_optimizer_cls_and_kwargs(self.args)
+    #     if self.optimizer is None:
+    #         parameters_names = get_parameter_names(self.model, [nn.LayerNorm])
+    #         decay_parameters = [name for name in parameters_names if "bias" not in name]
+    #         special_lr_params = [name for name in parameters_names if "bert" not in name]
+    #         optimizer_grouped_parameters = [{"params": [],"weight_decay":0.0}]
+    #         special_grouped_parameters = []
+    #         for n, p in self.model.named_parameters():
+    #             if n in decay_parameters:
+    #                 param = {"params": [p], "weight_decay": self.args.weight_decay}
+    #                 if n in special_lr_params:
+    #                     param["lr"] = 1e-3
+    #                 special_grouped_parameters.append(param)
+    #             elif n in special_lr_params:
+    #                 param = {"params": [p], "lr": 1e-3}
+    #                 special_grouped_parameters.append(param)
+    #             else:
+    #                 optimizer_grouped_parameters[0]["params"].append(p)
+    #         optimizer_grouped_parameters += special_grouped_parameters
+    #         optimizer_cls, optimizer_kwargs = Trainer.get_optimizer_cls_and_kwargs(self.args)
 
-            if self.sharded_ddp == ShardedDDPOption.SIMPLE:
-                self.optimizer = OSS(
-                    params=optimizer_grouped_parameters,
-                    optim=optimizer_cls,
-                    **optimizer_kwargs,
-                )
-            else:
-                self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
+    #         if self.sharded_ddp == ShardedDDPOption.SIMPLE:
+    #             self.optimizer = OSS(
+    #                 params=optimizer_grouped_parameters,
+    #                 optim=optimizer_cls,
+    #                 **optimizer_kwargs,
+    #             )
+    #         else:
+    #             self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
 
-        if is_sagemaker_mp_enabled():
-            self.optimizer = smp.DistributedOptimizer(self.optimizer)
+    #     if is_sagemaker_mp_enabled():
+    #         self.optimizer = smp.DistributedOptimizer(self.optimizer)
 
-        self.use_swa = False
-        self.use_lookahead = False
-        if self.args.other_tricks is not None:
-            if 'swa' in self.args.other_tricks:
-                from torchcontrib.optim import SWA
-                # https://pytorch.org/blog/stochastic-weight-averaging-in-pytorch/
-                logger.info(f'---------------- Using SWA, swa_start={self.args.swa_start}, swa_freq={self.args.swa_freq}, swa_lr={self.args.swa_lr}-------------')
-                self.use_swa = True
-                self.optimizer=SWA(self.optimizer,swa_start=self.args.swa_start,swa_freq=self.args.swa_freq,swa_lr=self.args.swa_lr)
-            elif 'lookahead' in self.args.other_tricks:
-                from modules.nn.lookahead import Lookahead
-                # https://pytorch.org/blog/stochastic-weight-averaging-in-pytorch/
-                logger.info(f'---------------- Using Lookahead, lookahead_k={self.args.lookahead_k}, lookahead_alpha={self.args.lookahead_alpha}--------------------')
-                self.use_lookahead = True
-                self.optimizer = Lookahead(self.optimizer, k=self.args.lookahead_k, alpha=self.args.lookahead_alpha) # Initialize Lookahead
+    #     self.use_swa = False
+    #     self.use_lookahead = False
+    #     if self.args.other_tricks is not None:
+    #         if 'swa' in self.args.other_tricks:
+    #             from torchcontrib.optim import SWA
+    #             # https://pytorch.org/blog/stochastic-weight-averaging-in-pytorch/
+    #             logger.info(f'---------------- Using SWA, swa_start={self.args.swa_start}, swa_freq={self.args.swa_freq}, swa_lr={self.args.swa_lr}-------------')
+    #             self.use_swa = True
+    #             self.optimizer=SWA(self.optimizer,swa_start=self.args.swa_start,swa_freq=self.args.swa_freq,swa_lr=self.args.swa_lr)
+    #         elif 'lookahead' in self.args.other_tricks:
+    #             from modules.nn.lookahead import Lookahead
+    #             # https://pytorch.org/blog/stochastic-weight-averaging-in-pytorch/
+    #             logger.info(f'---------------- Using Lookahead, lookahead_k={self.args.lookahead_k}, lookahead_alpha={self.args.lookahead_alpha}--------------------')
+    #             self.use_lookahead = True
+    #             self.optimizer = Lookahead(self.optimizer, k=self.args.lookahead_k, alpha=self.args.lookahead_alpha) # Initialize Lookahead
 
 
-        return self.optimizer
+    #     return self.optimizer
     
     
     def attack_step(self, model, inputs):

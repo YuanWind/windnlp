@@ -58,8 +58,11 @@ class PositionalEncoding(nn.Module):
 
 class AdaLabelModel(BartModel):
     def __init__(self, config: BartConfig):
+        
         super().__init__(config)
         self.shared = None
+        self.encoder = BartEncoder(config, self.shared)
+        self.decoder = BartDecoder(config, self.shared)
         self.bidecoder = TransformerBiDecoder(config)
         # TODO 是否将encoder、decoder、bidecoder的embed_positions改为正余弦函数式的
         # self.encoder.embed_positions = PositionalEncoding(config.dropout, config.d_model, config.max_position_embeddings)
