@@ -10,13 +10,13 @@
 			"request": "launch",
 			"program": "${file}",
 			"console": "integratedTerminal",
-			"justMyCode": true
+			"justMyCode": false
 		},
 		{
 			"name": "Python: main",
 			"type": "python",
 			"request": "launch",
-			"program": "projects/EMCGCN-ASTE/main.py",
+			"program": "projects/RRG/main.py",
 			"console": "integratedTerminal",
 			"justMyCode": false
 		}

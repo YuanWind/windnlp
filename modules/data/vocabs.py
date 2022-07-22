@@ -7,29 +7,47 @@
 '''
 from collections import Counter, defaultdict
 import json
-from lib2to3.pytree import Base
 import logging
-from tkinter.filedialog import askopenfile
-from xml.dom import INDEX_SIZE_ERR
-
-from requests import post
 logger = logging.getLogger(__name__.replace('_', ''))
 from scripts.utils import load_json, load_pkl, set_to_orderedlist
+from  functools  import  wraps 
 
+def add_labels(label_names=[]):
+    """装饰器，为类动态加入 {label_name}2id 和 id2{label_name} 属性。
+
+    Args:
+        label_names (list, optional): 待加入的label_names. Defaults to [].
+    """
+    
+    def set_class(vocab_class):
+        
+        class wrapper(vocab_class):
+            def __init__(self):
+                super().__init__()
+                for name in label_names:
+                    label2id = {'PAD':0, 'UNK':1}
+                    id2label = ['PAD', 'UNK']
+                    self.__setattr__(f'{name}2id', label2id)
+                    self.__setattr__(f'id2{name}', id2label)
+        return wrapper
+    return set_class
+            
 
 class BaseVocab:
-    def __init__(self):
+    def __init__(self, names = []):
         self.all_insts = []
         self.train_insts = []
         self.dev_insts = []
         self.test_insts = []
-        
-        self.label2id = {'PAD':0, 'UNK':1}
-        self.id2label = ['PAD', 'UNK']
-        
-    @property
-    def num_labels(self):
-        return len(self.id2label)
+        for name in names:
+            label2id = {'PAD':0, 'UNK':1}
+            id2label = ['PAD', 'UNK']
+            self.__setattr__(f'{name}2id', label2id)
+            self.__setattr__(f'id2{name}', id2label)
+
+    def get_label_num(self, name='labels'):
+        val = self.__getattribute__(f'id2{name}')
+        return len(val)
     
     def read_files(self, files, file_type = 'train'):
         """
@@ -53,14 +71,49 @@ class BaseVocab:
             file (str): 文件路径
             file_type (str, optional): ['train','dev','test']. Defaults to 'train'.
         """
-        raise NotImplementedError
+        if file_path[-3:] == 'pkl':
+            return load_pkl(file_path)
+        elif file_path[-3:] == 'son':
+            return load_json(file_path)
     
+    def set_labels(self, name, labels_set):
+        val = self.__getattribute__(f'id2{name}') 
+        val += set_to_orderedlist(labels_set)
+        self.__setattr__(f'id2{name}', val)
+        self.__setattr__(f'{name}2id', {v:idx for idx, v in enumerate(val)})
+        
     def build(self):
         """
         根据全部的insts构建vocab
         """
         raise NotImplementedError
+    
+class RRGVocab(BaseVocab):
+    def __init__(self, names = ['labels', 'aspect', 'sentiment']):
+        super().__init__(names)
+        self.token2aspect = {}
+        
+    def build(self, aspect2tokens):
+        aspect_set = set(aspect2tokens.keys())
+        self.set_labels('aspect', aspect_set)
+        
+        for k, vs in aspect2tokens.items():
+            for v in vs:
+                self.token2aspect[v] = k    
 
+@add_labels(['labels', 'aspect', 'sentiment'])
+class RRGVocab1(BaseVocab):
+    def __init__(self):
+        super().__init__()
+        self.token2aspect = {}
+        
+    def build(self, aspect2tokens):
+        aspect_set = set(aspect2tokens.keys())
+        self.set_labels('aspect', aspect_set)
+        
+        for k, vs in aspect2tokens.items():
+            for v in vs:
+                self.token2aspect[v] = k             
 class ASTEVocab(BaseVocab):
     def __init__(self):
         super().__init__() # Python 3 可以使用直接使用 super().xxx 代替 super(Class, self).xxx

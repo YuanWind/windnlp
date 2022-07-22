@@ -9,7 +9,7 @@ if 'OMP_NUM_THREADS' not in os.environ.keys():
 
 if 'CUDA_VISIBLE_DEVICES' not in os.environ.keys(): 
     gpu_number = check_empty_gpu()
-    logger.warning(f' 未指定使用的GPU，如果存在0卡，则将使用 {gpu_number} 卡。不存在就使用CPU模式')
+    logger.warning(f' 未指定使用的GPU，如果存在{gpu_number}卡，则将使用 {gpu_number} 卡。不存在就使用CPU模式')
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_number)
 else:
     logger.warning(f' CUDA_VISIBLE_DEVICES={os.environ["CUDA_VISIBLE_DEVICES"]}，将使用 {os.environ["CUDA_VISIBLE_DEVICES"]} 卡。')

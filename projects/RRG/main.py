@@ -1,3 +1,4 @@
+from lib2to3.pgen2 import token
 import sys
 sys.path.extend(['../../','./','../'])
 from scripts.main import run_init # 寻找可用的GPU
@@ -6,13 +7,68 @@ logger = logging.getLogger(__name__.replace('_', ''))
 from scripts.evaluater import Evaluater, compute_objective
 from scripts.trainer import MyTrainer
 from scripts.config import MyConfigs, set_configs
-from scripts.utils import set_seed
+from scripts.utils import set_seed, load_pkl
+from transformers import AutoTokenizer, BertModel, BertTokenizer, BartTokenizer
+from modules.data.datasets import RRGDataset
+from modules.data.collators import Datacollator
+from modules.nn.rrg_model import RRGModel
+import torch
 
-def build_model():
-    pass
+def build_model(kwargs=None):
+    config = Evaluater.config
+    if kwargs is not None:
+        if type(kwargs) != dict:
+            for k, v in kwargs.params.items():
+                config.set(k,v)
+        else:
+            for k, v in kwargs.items():
+                config.set(k,v)
+                
+    model = RRGModel(config)
+    
+    
+    return model
 
-def build_data():
-    pass
+def build_data(config, test_insts = None, train_insts=None, dev_insts=None):
+    
+    vocab = load_pkl(config.vocab_file)
+    if test_insts is not None:
+        logger.info('Change to new test insts')
+        vocab.test_insts = test_insts
+    else:
+        vocab.test_insts = vocab.dev_insts
+        
+    if train_insts is not None:
+        logger.info('Change to new train insts')
+        vocab.train_insts = train_insts
+    if dev_insts is not None:
+        logger.info('Change to new dev insts')
+        vocab.dev_insts = dev_insts    
+        
+    if config.max_train_num > 0:
+        vocab.train_insts = vocab.train_insts[:config.max_train_num]
+    if config.max_dev_num > 0:
+        vocab.dev_insts = vocab.dev_insts[:config.max_dev_num]
+    
+    if config.do_hp_search:
+        # random.shuffle(vocab.train_insts)  
+        logger.info(f'train num:{len(vocab.train_insts)}, 前1w做训练集来搜索超参数')
+        # vocab.dev_insts = vocab.train_insts[-10000:]
+        vocab.train_insts = vocab.train_insts[:10000]
+    
+    if config.add_dev_data_to_train:
+        vocab.train_insts = vocab.train_insts + vocab.dev_insts
+        
+    tokenizer = AutoTokenizer.from_pretrained(config.pretrained_model_name_or_path)
+    config.set('vocab_size', tokenizer.vocab_size)
+    train_set = RRGDataset(config, vocab.train_insts, tokenizer, vocab, data_type='train', convert_here=not config.convert_features_in_run_time)
+    dev_set = RRGDataset(config, vocab.dev_insts, tokenizer, vocab, data_type='dev', convert_here=not config.convert_features_in_run_time)
+    test_set = RRGDataset(config, vocab.test_insts, tokenizer, vocab, data_type='test', convert_here=not config.convert_features_in_run_time)
+    data_collator = Datacollator(config, vocab, tokenizer, RRGDataset.convert_to_features, convert_here=config.convert_features_in_run_time)
+    Evaluater.vocab = vocab
+    Evaluater.tokenizer = tokenizer
+    return vocab,train_set,dev_set,test_set,data_collator
+    
 
 def hp_space(trial):
     search_space = {}
@@ -72,4 +128,4 @@ def train_main(config_path, args=None, extra_args=None):   # sourcery skip: extr
 
 
 if __name__ == '__main__':
-    train_main('projects/0_example_project/example.cfg')
+    train_main('projects/RRG/main.cfg')

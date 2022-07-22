@@ -6,6 +6,7 @@
 @Desc    :   None
 '''
 from collections import defaultdict
+from lib2to3.pgen2 import token
 from lib2to3.pytree import Base
 import logging
 from typing import Dict
@@ -15,7 +16,6 @@ logger = logging.getLogger(__name__.replace('_', ''))
 from torch.utils.data import Dataset
 import torch
 import os
-import jieba
 
 
 class BaseDataset(Dataset):
@@ -70,6 +70,35 @@ class BaseDataset(Dataset):
         """
         raise NotImplementedError(f"convert_to_features(): not implemented!")
 
+class RRGDataset(BaseDataset):
+    def __init__(self, config, insts, tokenizer, vocab, data_type='train', convert_here=False):
+        super().__init__(config, insts, tokenizer, vocab, data_type, convert_here)
+        
+    @staticmethod
+    def convert_to_features(config, insts, tokenizer, vocab):
+        features = []
+        src_sentences = []
+        tgt_sentences = []
+        for inst in insts:
+            src_sentences.append(inst['src'])
+            tgt_sentences.append(inst['tgt'])
+        srcs = tokenizer(src_sentences, add_special_tokens=True,
+                                      padding = 'max_length', max_length = config.max_seq_len, 
+                                      return_tensors = 'pt')
+        tgts = tokenizer(tgt_sentences, add_special_tokens=True,
+                                      padding = 'max_length', max_length = config.max_seq_len, 
+                                      return_tensors = 'pt')
+        for idx, inst in enumerate(insts):
+            
+            one_feature = {
+                'src_input_ids': srcs.input_ids[idx],
+                'tgt_input_ids':tgts.input_ids[idx],
+                'src_attention_mask': srcs.attention_mask[idx],
+                'tgt_attention_mask': tgts.attention_mask[idx],
+            }
+            features.append(one_feature)
+        return features
+        
 class ASTEDataset(BaseDataset):
     def __init__(self, config, insts, tokenizer, vocab, data_type='train', convert_here=False):
         """方面-意见-情感三元组抽取数据集
@@ -284,6 +313,7 @@ class NERDataset(BaseDataset):
     
     @staticmethod
     def convert_to_features(config, insts, tokenizer, vocab):
+        import jieba
         features = []
         # TODO 改成 tokenize-fast版本
         for inst in insts:
