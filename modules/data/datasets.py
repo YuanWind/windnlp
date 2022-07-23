@@ -83,13 +83,12 @@ class RRGDataset(BaseDataset):
             src_sentences.append(inst['src'])
             tgt_sentences.append(inst['tgt'])
         srcs = tokenizer(src_sentences, add_special_tokens=True,
-                                      padding = 'max_length', max_length = config.max_seq_len, 
+                                      padding = 'longest',truncation=True,
                                       return_tensors = 'pt')
         tgts = tokenizer(tgt_sentences, add_special_tokens=True,
-                                      padding = 'max_length', max_length = config.max_seq_len, 
+                                      padding = 'longest',truncation=True,
                                       return_tensors = 'pt')
         for idx, inst in enumerate(insts):
-            
             one_feature = {
                 'src_input_ids': srcs.input_ids[idx],
                 'tgt_input_ids':tgts.input_ids[idx],

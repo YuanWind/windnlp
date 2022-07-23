@@ -65,7 +65,7 @@ class Evaluater:
         res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True)
         for idx, inst in enumerate(insts):
             inst['pred'] = res[idx]
-            
+            # inst['pred_ids'] = generate_ids[idx]
         Evaluater.res.extend(insts)
     
 def eval_generate(insts):
@@ -75,16 +75,20 @@ def eval_generate(insts):
     for inst in insts:
         golden.append(inst['tgt'])
         infer.append(inst['pred'])
-        one_tgt_ids = Evaluater.tokenizer(inst['tgt'], add_special_tokens = False,
+        one_tgt_ids = Evaluater.tokenizer(inst['tgt'], add_special_tokens = True,
                                       padding = 'max_length', max_length = Evaluater.config.max_seq_len, 
                                       )
-        one_pred_ids =  Evaluater.tokenizer(inst['pred'], add_special_tokens = False,
+        one_pred_ids =  Evaluater.tokenizer(inst['pred'], add_special_tokens = True,
                                       padding = 'max_length', max_length = Evaluater.config.max_seq_len, 
                                       )
-        pred_ids.extend(one_pred_ids.input_ids)
-        tgt_ids.extend(one_tgt_ids.input_ids)
-    # eval bleu
+        pred_ids.append(one_pred_ids.input_ids)
+        tgt_ids.append(one_tgt_ids.input_ids)
     
+    ppl, acc = calc_ppl_acc(Evaluater.total_loss, pred_ids, tgt_ids)
+    res_dict["ppl"] = ppl
+    res_dict["acc"] = acc
+    
+    # eval bleu
     chencherry = SmoothingFunction()
     for i in range(4):
         weights = [1 / (i + 1)] * (i + 1)
@@ -108,9 +112,7 @@ def eval_generate(insts):
     for idx, x in enumerate(ent):
         res_dict[f"ent-{idx}"] = round(x, 2)
     
-    ppl, acc = calc_ppl_acc(Evaluater.total_loss, pred_ids, tgt_ids)
-    res_dict["ppl"] = ppl
-    res_dict["acc"] = acc
+    
     return res_dict
 
 def calc_ppl_acc(loss, pred_ids, tgt_ids):

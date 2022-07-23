@@ -10,6 +10,7 @@ from scripts.evaluater import Evaluater
 from transformers.trainer import *
 from modules.nn.adversarial import AWP, EMA, FGM, PGD
 import logging
+
 logger = logging.getLogger(__name__.replace('_', ''))
 
 class MyTrainer(Trainer):
