@@ -17,7 +17,7 @@ from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
 
 
 
-eps_div = 1e-10
+
 def compute_objective(metrics):
     # 设置 optuna 超参搜索的优化目标
     metrics = copy.deepcopy(metrics)
@@ -57,7 +57,6 @@ class Evaluater:
         end = Evaluater.finished_idx
         insts = Evaluater.vocab.dev_insts[start:end] if Evaluater.stage == 'dev' else Evaluater.vocab.test_insts[start:end]
         tokenizer = Evaluater.tokenizer
-        vocab = Evaluater.vocab
         
         batch_loss,_, generate_ids = preds_host[1][0],preds_host[1][1], preds_host[2]
         Evaluater.total_loss += batch_loss.item()
@@ -65,7 +64,6 @@ class Evaluater:
         res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True)
         for idx, inst in enumerate(insts):
             inst['pred'] = res[idx]
-            # inst['pred_ids'] = generate_ids[idx]
         Evaluater.res.extend(insts)
     
 def eval_generate(insts):
@@ -73,8 +71,8 @@ def eval_generate(insts):
     golden, infer = [], []
     pred_ids, tgt_ids = [], []
     for inst in insts:
-        golden.append(inst['tgt'])
-        infer.append(inst['pred'])
+        golden.append([inst['tgt'].strip().split()])
+        infer.append(inst['pred'].strip().split())
         one_tgt_ids = Evaluater.tokenizer(inst['tgt'], add_special_tokens = True,
                                       padding = 'max_length', max_length = Evaluater.config.max_seq_len, 
                                       )
@@ -132,6 +130,7 @@ def calc_ppl_acc(loss, pred_ids, tgt_ids):
 def calc_diversity(hyp):
     # based on Yizhe Zhang's code
     
+    eps_div = 1e-10
     tokens = [0.0, 0.0]
     types = [collections.defaultdict(int), collections.defaultdict(int)]
     for line in hyp:
@@ -143,6 +142,7 @@ def calc_diversity(hyp):
     div1 = len(types[0].keys()) / (tokens[0]+eps_div)
     div2 = len(types[1].keys()) / (tokens[1]+eps_div)
     return [div1, div2]
+
 
 
 def calc_entropy(hyps, n_lines=None):
@@ -159,7 +159,7 @@ def calc_entropy(hyps, n_lines=None):
     for n in range(4):
         total = sum(counter[n].values())
         for v in counter[n].values():
-            etp_score[n] += - v / (total * (np.log(v) - np.log(total))+eps_div)
+            etp_score[n] += - v / total * (np.log(v) - np.log(total))
 
     return etp_score
 

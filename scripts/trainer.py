@@ -18,8 +18,9 @@ class MyTrainer(Trainer):
         super().__init__(args=config.trainer_args, **kwargs)
         self.config = config
         self.current_step = 0
+        # TODO early_stop 换成Trainer自带的更好
         self.early_stop_mode = self.config.early_stop_mode # -1代表关闭，0代表连续评测四次没提升就停止，>0的数字代表具体的哪一轮停止
-        self.early_stop_counter = 0
+        self.early_stop_counter = 0 
         self.use_swa = False
         self.use_lookahead = False
         
@@ -39,62 +40,45 @@ class MyTrainer(Trainer):
             loss.backward()
     
     
-    # def create_optimizer(self):
-    #     """
-    #     设置分层学习率
-    #     """
+    def create_optimizer(self):
+        """
+        设置分层学习率、swa、lookahead
+        """
         
             
-    #     if self.optimizer is None:
-    #         parameters_names = get_parameter_names(self.model, [nn.LayerNorm])
-    #         decay_parameters = [name for name in parameters_names if "bias" not in name]
-    #         special_lr_params = [name for name in parameters_names if "bert" not in name]
-    #         optimizer_grouped_parameters = [{"params": [],"weight_decay":0.0}]
-    #         special_grouped_parameters = []
-    #         for n, p in self.model.named_parameters():
-    #             if n in decay_parameters:
-    #                 param = {"params": [p], "weight_decay": self.args.weight_decay}
-    #                 if n in special_lr_params:
-    #                     param["lr"] = 1e-3
-    #                 special_grouped_parameters.append(param)
-    #             elif n in special_lr_params:
-    #                 param = {"params": [p], "lr": 1e-3}
-    #                 special_grouped_parameters.append(param)
-    #             else:
-    #                 optimizer_grouped_parameters[0]["params"].append(p)
-    #         optimizer_grouped_parameters += special_grouped_parameters
-    #         optimizer_cls, optimizer_kwargs = Trainer.get_optimizer_cls_and_kwargs(self.args)
+        if self.optimizer is None:
+            
+            optimizer_grouped_parameters = self.model.optimizer_grouped_parameters(self.args.weight_decay)
+            optimizer_cls, optimizer_kwargs = Trainer.get_optimizer_cls_and_kwargs(self.args)
 
-    #         if self.sharded_ddp == ShardedDDPOption.SIMPLE:
-    #             self.optimizer = OSS(
-    #                 params=optimizer_grouped_parameters,
-    #                 optim=optimizer_cls,
-    #                 **optimizer_kwargs,
-    #             )
-    #         else:
-    #             self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
+            if self.sharded_ddp == ShardedDDPOption.SIMPLE:
+                self.optimizer = OSS(
+                    params=optimizer_grouped_parameters,
+                    optim=optimizer_cls,
+                    **optimizer_kwargs,
+                )
+            else:
+                self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
 
-    #     if is_sagemaker_mp_enabled():
-    #         self.optimizer = smp.DistributedOptimizer(self.optimizer)
+        if is_sagemaker_mp_enabled():
+            self.optimizer = smp.DistributedOptimizer(self.optimizer)
 
-    #     self.use_swa = False
-    #     self.use_lookahead = False
-    #     if self.args.other_tricks is not None:
-    #         if 'swa' in self.args.other_tricks:
-    #             from torchcontrib.optim import SWA
-    #             # https://pytorch.org/blog/stochastic-weight-averaging-in-pytorch/
-    #             logger.info(f'---------------- Using SWA, swa_start={self.args.swa_start}, swa_freq={self.args.swa_freq}, swa_lr={self.args.swa_lr}-------------')
-    #             self.use_swa = True
-    #             self.optimizer=SWA(self.optimizer,swa_start=self.args.swa_start,swa_freq=self.args.swa_freq,swa_lr=self.args.swa_lr)
-    #         elif 'lookahead' in self.args.other_tricks:
-    #             from modules.nn.lookahead import Lookahead
-    #             # https://pytorch.org/blog/stochastic-weight-averaging-in-pytorch/
-    #             logger.info(f'---------------- Using Lookahead, lookahead_k={self.args.lookahead_k}, lookahead_alpha={self.args.lookahead_alpha}--------------------')
-    #             self.use_lookahead = True
-    #             self.optimizer = Lookahead(self.optimizer, k=self.args.lookahead_k, alpha=self.args.lookahead_alpha) # Initialize Lookahead
+        if self.args.other_tricks is not None:
+            if 'swa' in self.args.other_tricks:
+                from torchcontrib.optim import SWA
+                # https://pytorch.org/blog/stochastic-weight-averaging-in-pytorch/
+                logger.info(f'---------------- Using SWA, swa_start={self.args.swa_start}, swa_freq={self.args.swa_freq}, swa_lr={self.args.swa_lr}-------------')
+                self.use_swa = True
+                self.optimizer=SWA(self.optimizer,swa_start=self.args.swa_start,swa_freq=self.args.swa_freq,swa_lr=self.args.swa_lr)
+            elif 'lookahead' in self.args.other_tricks:
+                from modules.nn.lookahead import Lookahead
+                # https://pytorch.org/blog/stochastic-weight-averaging-in-pytorch/
+                logger.info(f'---------------- Using Lookahead, lookahead_k={self.args.lookahead_k}, lookahead_alpha={self.args.lookahead_alpha}--------------------')
+                self.use_lookahead = True
+                self.optimizer = Lookahead(self.optimizer, k=self.args.lookahead_k, alpha=self.args.lookahead_alpha) # Initialize Lookahead
 
 
-    #     return self.optimizer
+        return self.optimizer
     
     
     def attack_step(self, model, inputs):
@@ -379,8 +363,9 @@ class MyTrainer(Trainer):
         # 只保存评测分数最高的模型或参数，而不保存optimizer等信息
         best_key = f'{metric_key_prefix}_{args.metric_for_best_model}' 
         if self.state.best_metric is not None: # 第一轮未评测之前，其为 None
-            if best_key in metrics:
-                if metrics[best_key] > self.state.best_metric:
+            if best_key in metrics: 
+                if (metrics[best_key] > self.state.best_metric and self.args.greater_is_better) or \
+                   (metrics[best_key] < self.state.best_metric and not self.args.greater_is_better): 
                     self.save()
                     self.early_stop_counter = 0
                 else:
@@ -394,30 +379,68 @@ class MyTrainer(Trainer):
         
         if self.early_stop_mode > 0 and self.state.epoch >= self.early_stop_mode:
             logger.info(f'Current epoch: {self.state.epoch}, stop training because of early_stop_mode = {self.early_stop_mode}.')
-            exit(1)
+            self.control.should_training_stop = True
         elif self.early_stop_mode == 0 and self.early_stop_counter == 4:
             logger.info(f'Current epoch: {self.state.epoch}, stop training because of early_stop_mode = {self.early_stop_mode} and early_stop_counter = {self.early_stop_counter}.')
-            exit(1)
+            self.control.should_training_stop = True
             
         return EvalLoopOutput(predictions=all_preds, label_ids=all_labels, metrics=metrics, num_samples=num_samples)
 
     def save(self, only_params = True):
-        #self.config.best_model_file '/home/mw/work/latest_params.pt'
+        # 增加了该方法供自定义保存使用。默认save方式为保存最好的self.state.best_metric的模型参数到指定的 save_path
         save_path = self.config.best_model_file
         
         if only_params:
             params_state = self.model.state_dict()
             new_params_state = params_state.copy()
             for k, v in params_state.items():
-                if 'positions_encoding' in k:
+                if 'positions_encoding' in k: # nezha的positions_encoding不用保存
                     new_params_state.pop(k)
+                    logger.warning('Positions_encoding params will not be saved.')
             torch.save(new_params_state, save_path)
             logger.info(f'Save model params to {save_path}')
         
         else:
             torch.save(self.model, save_path)
             logger.info(f'Save total model to {save_path}')
-        
+    
+    def _maybe_log_save_evaluate(self, tr_loss, model, trial, epoch, ignore_keys_for_eval):
+        # 重写该方法，主要是为了能够记录 Model 中自定义的一些状态，比如多个loss值之类的。
+        if self.control.should_log:
+            if is_torch_tpu_available():
+                xm.mark_step()
+
+            logs: Dict[str, float] = {}
+
+            # all_gather + mean() to get average loss over all processes
+            tr_loss_scalar = self._nested_gather(tr_loss).mean().item()
+
+            # reset tr_loss to zero
+            tr_loss -= tr_loss
+
+            logs["loss"] = round(tr_loss_scalar / (self.state.global_step - self._globalstep_last_logged), 4)
+            logs["learning_rate"] = self._get_learning_rate()
+            #----------------增加的代码：---------------------
+            if self.model.cur_batch_state is not None:
+                if 'loss' in self.model.cur_batch_state:
+                    self.model.cur_batch_state['loss_in_model'] = self.model.cur_batch_state.pop('loss')
+                logs.update(self.model.cur_batch_state)
+            #------------------结束--------------------------
+            self._total_loss_scalar += tr_loss_scalar
+            self._globalstep_last_logged = self.state.global_step
+            self.store_flos()
+
+            self.log(logs)
+
+        metrics = None
+        if self.control.should_evaluate:
+            metrics = self.evaluate(ignore_keys=ignore_keys_for_eval)
+            self._report_to_hp_search(trial, epoch, metrics)
+
+        if self.control.should_save:
+            self._save_checkpoint(model, trial, metrics=metrics)
+            self.control = self.callback_handler.on_save(self.args, self.state, self.control)
+    
     def call_model_init(self, trial=None):
         # 增加对抗训练初始化
         model_init_argcount = number_of_arguments(self.model_init)
@@ -463,6 +486,7 @@ class MyTrainer(Trainer):
         # def get_test_dataloader(self, test_dataset: Dataset) -> DataLoader:
             # pass
     
+    # 以下代码未测试，仅供参考
     def ensemble_loops(self, models, test_set, prediction_loss_only=False):
         args = self.args
         metric_key_prefix = 'ens'

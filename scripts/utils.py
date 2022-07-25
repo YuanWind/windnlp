@@ -45,12 +45,14 @@ def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
     try:
         import pynvml
         import time
+        import random
         start = time.time()
         find_times = 0
         pynvml.nvmlInit()
         cnt = pynvml.nvmlDeviceGetCount()
         logger.warning(f'Start to find the GPU device of using memory<{threshold_mem/1000000}M ...')
         while True:
+            
             for i in range(cnt):
                 handle = pynvml.nvmlDeviceGetHandleByIndex(i)
                 info = pynvml.nvmlDeviceGetMemoryInfo(handle)
@@ -69,6 +71,11 @@ def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
             if find_times > find_ours: # 如果超过 find_ours 个小时还没有分配到GPU，则停止程序
                 logger.warning(f'已经经过{find_times}小时，还未找到可用的GPU，终止程序。')
                 exit()
+            # 随机停止 1~5分钟后开始下一次寻找可用的GPU
+            random_time = random.randint(1,5)
+            logger.warning(f'当前无可用的GPU，{random_time}分钟后开始下一次寻找可用的GPU。')
+            time.sleep(random_time*60)
+            
     except:
         return 0
         

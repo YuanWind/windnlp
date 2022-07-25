@@ -7,6 +7,7 @@ class TransformerBiDecoder(BartDecoder):
     def __init__(self, config: BartConfig, embed_tokens: Optional[nn.Embedding] = None) -> None:
         super().__init__(config, embed_tokens)
         self.layers = nn.ModuleList([BartDecoderLayer(config) for _ in range(1)])
+        self.post_init()
         
 class PositionalEncoding(nn.Module):
     """Sinusoidal positional encoding for non-recurrent neural networks.
@@ -66,7 +67,7 @@ class AdaLabelModel(BartModel):
         self.bidecoder = TransformerBiDecoder(config)
         # TODO 是否将encoder、decoder、bidecoder的embed_positions改为正余弦函数式的
         # self.encoder.embed_positions = PositionalEncoding(config.dropout, config.d_model, config.max_position_embeddings)
-    
+        self.post_init()
     def forward(self, 
                 input_ids: torch.LongTensor = None, 
                 attention_mask: Optional[torch.Tensor] = None, 
@@ -106,6 +107,28 @@ class AdaLabelModel(BartModel):
                 bidecoder_outputs.last_hidden_state, 
                 bidecoder_outputs.cross_attentions)
 
+class AdaLabel_BartForConditionalGeneration(BartForConditionalGeneration):
+    def __init__(self, config: AdaLabelConfig) -> None:
+        super().__init__(config)
+        self.bidecoder = TransformerBiDecoder(config)
+        self.bidecoder_generator = nn.Linear(self.config.d_model, self.config.vocab_size)
+        self.post_init()
+    
+    def forward(self, input_ids: torch.LongTensor = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[List[torch.FloatTensor]] = None, past_key_values: Optional[List[torch.FloatTensor]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, labels: Optional[torch.LongTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None) -> Union[Tuple, Seq2SeqLMOutput]:
+        seq2SeqLMOutput = super().forward(input_ids, attention_mask, decoder_input_ids, decoder_attention_mask, head_mask, decoder_head_mask, cross_attn_head_mask, encoder_outputs, past_key_values, inputs_embeds, decoder_inputs_embeds, labels, use_cache, output_attentions, output_hidden_states, return_dict)
+        encoder_outs = seq2SeqLMOutput.encoder_last_hidden_state
+        generate1 = seq2SeqLMOutput.logits
+        bidec_outs = self.bidecoder(encoder_outs)
+        generate2 = self.bidecoder_generator(bidec_outs)
+        
+        
+        dict_outs = {
+            'logits':generate1,
+            'generate2': generate2
+        }
+        
+        return ModelOutput(**dict_outs)
+    
 
 class AdaLabelForConditionalGeneration(BartPretrainedModel):
     def __init__(self, config: AdaLabelConfig) -> None:
@@ -113,8 +136,7 @@ class AdaLabelForConditionalGeneration(BartPretrainedModel):
         self.model = AdaLabelModel(config)
         self.generator = nn.Linear(self.config.d_model, self.config.vocab_size)
         self.bidecoder_generator = nn.Linear(self.config.d_model, self.config.vocab_size)
-        self._init_weights(self.generator)
-        self._init_weights(self.bidecoder_generator)
+        self.post_init()
         
     def forward(
         self,
@@ -155,11 +177,9 @@ class AdaLabelForConditionalGeneration(BartPretrainedModel):
         )
         generate1 = self.generator(dec_outs)
         generate2 = self.bidecoder_generator(bidec_outs)
-        generate1_log_softmax = F.log_softmax(generate1, dim=-1)
         
         dict_outs = {
             'logits':generate1,
-            'generate1_log_softmax': generate1_log_softmax,
             'generate2': generate2
         }
         

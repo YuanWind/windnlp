@@ -17,6 +17,9 @@
 			"type": "python",
 			"request": "launch",
 			"program": "projects/RRG/main.py",
+			"args": [
+				"--postfix", "debug"
+			],
 			"console": "integratedTerminal",
 			"justMyCode": false
 		},
@@ -26,7 +29,8 @@
 			"request": "launch",
 			"program": "projects/RRG/main.py",
 			"args": [
-				"--config_file", "projects/RRG/main_chinese.cfg"
+				"--config_file", "projects/RRG/main_chinese.cfg",
+				"--postfix", "debug"
 			],
 			"console": "integratedTerminal",
 			"justMyCode": false

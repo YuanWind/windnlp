@@ -35,9 +35,9 @@ def build_data(config, test_insts = None, train_insts=None, dev_insts=None):
     if test_insts is not None:
         logger.info('Change to new test insts')
         vocab.test_insts = test_insts
-    else:
-        vocab.test_insts = vocab.dev_insts
         
+    # vocab.test_insts = vocab.train_insts[:6000]
+    
     if train_insts is not None:
         logger.info('Change to new train insts')
         vocab.train_insts = train_insts
@@ -62,8 +62,8 @@ def build_data(config, test_insts = None, train_insts=None, dev_insts=None):
     tokenizer = AutoTokenizer.from_pretrained(config.pretrained_model_name_or_path)
     config.set('vocab_size', tokenizer.vocab_size)
     config.set('pad_token_id', tokenizer.pad_token_id)
-    config.set('bos_token_id', tokenizer.cls_token_id)
-    config.set('eos_token_id', tokenizer.sep_token_id)
+    config.set('bos_token_id', tokenizer.bos_token_id if tokenizer.bos_token_id is not None else tokenizer.cls_token_id)
+    config.set('eos_token_id', tokenizer.eos_token_id if tokenizer.eos_token_id is not None else tokenizer.sep_token_id)
     train_set = RRGDataset(config, vocab.train_insts, tokenizer, vocab, data_type='train', convert_here=not config.convert_features_in_run_time)
     dev_set = RRGDataset(config, vocab.dev_insts, tokenizer, vocab, data_type='dev', convert_here=not config.convert_features_in_run_time)
     test_set = RRGDataset(config, vocab.test_insts, tokenizer, vocab, data_type='test', convert_here=not config.convert_features_in_run_time)
@@ -129,6 +129,36 @@ def train_main(config_path, args=None, extra_args=None):   # sourcery skip: extr
     logger.info('---------------------------Train  Finish!  ----------------------------------\n\n')
     return config
 
+def eval_main(config_path, args=None, extra_args=None):   # sourcery skip: extract-duplicate-method
+    
+    config = set_configs(config_path, args, extra_args)
+    set_seed(config.seed)
+    Evaluater.config = config
+    if config.trainer_args.do_eval or config.trainer_args.do_predict:
+        vocab, train_set, dev_set, test_set, data_collator = build_data(config)
+        Evaluater.vocab = vocab
+        trainer = MyTrainer(config, 
+                            model_init = build_model,
+                            train_dataset=train_set, 
+                            eval_dataset=dev_set, 
+                            data_collator = data_collator,
+                            compute_metrics=Evaluater.evaluate,
+                            )
+        logger.info(f'Load model state from {config.best_model_file}')
+        trainer.model.load_state_dict(torch.load(config.best_model_file))
+        if config.trainer_args.do_eval and dev_set is not None:
+            logger.info('Start dev...\n\n')
+            Evaluater.stage = 'dev'
+            trainer.evaluate(dev_set)
+            logger.info(f'Finished dev\n\n')
+        if config.trainer_args.do_predict and test_set is not None:
+            logger.info('Start testing...\n\n')
+            Evaluater.stage = 'test'
+            trainer.evaluate(test_set)
+            logger.info(f'Finished testing\n\n')
+        
+        logger.info('---------------------------Test  Finish!  ----------------------------------\n\n')
 
 if __name__ == '__main__':
     train_main('projects/RRG/main.cfg')
+    eval_main('projects/RRG/main.cfg')
