@@ -59,11 +59,11 @@ class AdaEvaluater:
     @classmethod
     def steps_evaluate(cls, preds_host, inputs_host, labels_host):
         start = cls.finished_idx
-        cls.finished_idx += len(preds_host[2])
+        generate_ids = preds_host[1]
+        cls.finished_idx += len(generate_ids)
         end = cls.finished_idx
         insts = cls.vocab.dev_insts[start:end] if cls.stage == 'dev' else cls.vocab.test_insts[start:end]
         tokenizer = cls.tokenizer
-        generate_ids = preds_host[1]
         
         res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True)
         for idx, inst in enumerate(insts):
@@ -76,7 +76,6 @@ def eval_generate(insts, config):
     pred_ids, tgt_ids = [], []
     tokenizer = BertTokenizer.from_pretrained('bert-base-chinese' if config.language=='zh' else 'bert-base-uncased')
     for inst in insts:
-        golden.append([inst['tgt'].strip().split()])
         one_tgt_ids = tokenizer(inst['tgt'], add_special_tokens = True,
                                       padding = 'max_length', max_length = config.max_seq_len, 
                                       )
@@ -85,6 +84,10 @@ def eval_generate(insts, config):
                                       )
         pred_ids.append(one_pred_ids.input_ids)
         tgt_ids.append(one_tgt_ids.input_ids)
+        
+        g = tokenizer.decode(one_tgt_ids.input_ids, skip_special_tokens=True,
+                                           clean_up_tokenization_spaces=False).split(None)
+        golden.append([g])
         p = tokenizer.decode(one_pred_ids.input_ids, skip_special_tokens=True,
                                            clean_up_tokenization_spaces=False).split(None)
         infer.append(p)

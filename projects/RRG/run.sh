@@ -11,6 +11,9 @@ nohup python projects/RRG/main.py --config_file projects/RRG/main.cfg --postfix 
 		--learning_rate 2e-4 \
 		> projects/RRG/log_ori_ada.txt 2>&1 &
 
+
+
+
 nohup python projects/RRG/main.py --config_file projects/RRG/main.cfg --postfix 'ori_bart' --model_type 'ori_bart' \
 		--learning_rate 1e-4 \
 		> projects/RRG/log_ori_bart.txt 2>&1 &
@@ -26,6 +29,11 @@ nohup python projects/RRG/main.py --config_file projects/RRG/main.cfg --postfix 
 nohup python projects/RRG/main.py --config_file projects/RRG/main.cfg --postfix 'ori_bart_25' --model_type 'ori_bart' \
 		--learning_rate 2e-4 \
 		> projects/RRG/log_ori_bart_25.txt 2>&1 &
+
+# chinese
+nohup python projects/RRG/main.py --config_file projects/RRG/main_chinese.cfg --postfix 'ori_ada_zh' --model_type 'ori_ada'\
+		--learning_rate 3e-4 \
+		> projects/RRG/log_ori_ada_zh.txt 2>&1 &
 
 # eval
 python projects/RRG/main.py --do_train false --config_file projects/RRG/main.cfg \

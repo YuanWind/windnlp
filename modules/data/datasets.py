@@ -82,7 +82,7 @@ class RRGDataset(BaseDataset):
         for inst in insts:
             src_sentences.append(inst['src'])
             tgt_sentences.append(inst['tgt'])
-        srcs = tokenizer(src_sentences, add_special_tokens=True,
+        srcs = tokenizer(src_sentences, add_special_tokens=True, 
                                       padding = 'longest',truncation=True,
                                       return_tensors = 'pt')
         tgts = tokenizer(tgt_sentences, add_special_tokens=True,
