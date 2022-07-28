@@ -37,12 +37,12 @@ nohup python projects/RRG/main.py --config_file projects/RRG/main_chinese.cfg --
 
 # eval
 python projects/RRG/main.py --do_train false --config_file projects/RRG/main.cfg \
-		--postfix 'test' --model_type 'ori_ada' \
-		--best_model_file 'projects/RRG/outs/ori_ada_25/best_model/best.pt'
+		--postfix 'ori_ada' --model_type 'ori_ada' \
+		--best_model_file 'projects/RRG/outs/ori_ada/best_model/best.pt'
 
 python projects/RRG/main.py --do_train false --config_file projects/RRG/main.cfg \
 		--postfix 'ori_bart' --model_type 'ori_bart' \
-		--best_model_file 'projects/RRG/outs_bak/ori_ada_25/best_model/best.pt'
+		--best_model_file 'projects/RRG/outs/ori_bart/best_model/best.pt'
 
 
 

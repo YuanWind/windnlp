@@ -53,12 +53,12 @@ class RRGModel(BaseModel):
         logits, logits2 = outs[0], outs[1]
         
         # 计算损失值
-        loss,loss2,nll_loss = self.calc_loss(logits, logits2, tgt_input_ids)
+        loss,loss2,nll_loss,ada_loss = self.calc_loss(logits, logits2, tgt_input_ids)
         
         generate_ids = None
         if not self.training:
             generate_ids = self.generate(src_input_ids)
-        num_words = self.record_state(logits, tgt_input_ids, loss, logits2, loss2, nll_loss, generate_ids)
+        num_words = self.record_state(logits, tgt_input_ids, loss if ada_loss is None else ada_loss, logits2, loss2, nll_loss, generate_ids)
         return {'loss': loss / num_words, 'logits': logits, 'generate_ids': generate_ids}
 
     def generate(self, src_input_ids):
@@ -77,7 +77,7 @@ class RRGModel(BaseModel):
                                   ignore_index=self.criterion.ignore_index, reduction="sum")
             loss2 = 0
             nll_loss = loss
-            
+            ada_loss = None
         else:
             loss2 = F.cross_entropy(generate2.reshape(-1, self.adalabel_config.vocab_size), decoder_input_ids.reshape(-1),
                                     ignore_index=self.criterion.ignore_index, reduction='sum')
@@ -89,7 +89,7 @@ class RRGModel(BaseModel):
                                     ignore_index=self.criterion.ignore_index, reduction="sum")
             loss = loss2 + ada_loss
         
-        return loss,loss2,nll_loss
+        return loss,loss2,nll_loss,ada_loss
     
     def record_state(self, logits, loss_tgt_input_ids, loss, logits2, loss2, nll_loss, generate_ids):
 
@@ -134,11 +134,11 @@ class RRGModel(BaseModel):
         state=OrderedDict({
             'loss': loss.item(),
             'generate_acc': generate_acc.item(),
-            'acc': acc.item(),
+            'gen1_acc': acc.item(),
             'nll_loss': nll_loss.item(),
             'ppl': ppl.item(),
-            'label_acc': label_acc.item(),
-            'label_ppl':label_ppl.item(),
+            'gen2_acc': label_acc.item(),
+            'gen2_ppl':label_ppl.item(),
             'avg_loss':(loss/num).item(),
         })
         for k ,v in state.items():
