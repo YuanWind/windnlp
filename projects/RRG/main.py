@@ -4,7 +4,6 @@ sys.path.extend(['../../','./','../'])
 from scripts.main import run_init # 寻找可用的GPU
 import logging
 logger = logging.getLogger(__name__.replace('_', ''))
-from scripts.evaluater import Evaluater, compute_objective
 from scripts.trainer import MyTrainer
 from scripts.config import MyConfigs, set_configs
 from scripts.utils import set_seed, load_pkl
@@ -13,6 +12,7 @@ from modules.data.datasets import RRGDataset
 from modules.data.collators import Datacollator
 from modules.nn.rrg_model import RRGModel
 import torch
+from ada_evaluater import AdaEvaluater as Evaluater, compute_objective
 
 def build_model(kwargs=None):
     config = Evaluater.config
@@ -26,7 +26,7 @@ def build_model(kwargs=None):
                 
     model = RRGModel(config)
     
-    
+    # model.load_state_dict(torch.load('projects/RRG/outs/ori_bart1/checkpoint-30800/pytorch_model.bin'))
     return model
 
 def build_data(config, test_insts = None, train_insts=None, dev_insts=None):
@@ -96,13 +96,14 @@ def hp_space(trial):
     logger.info(f'搜索的超参为：{MyConfigs.hp_search_names}')
     return search_space      
  
-def train_main(config_path, args=None, extra_args=None):   # sourcery skip: extract-duplicate-method
+def main(config_path, args=None, extra_args=None):   # sourcery skip: extract-duplicate-method
     config = set_configs(config_path, args, extra_args)
     set_seed(config.seed)
     Evaluater.config = config
-    vocab, train_set, dev_set, _, data_collator = build_data(config)
+    vocab, train_set, dev_set, test_set, data_collator = build_data(config)
     Evaluater.vocab = vocab
     trainer = MyTrainer(config, 
+                        Evaluater,
                         model_init = build_model,
                         train_dataset=train_set, 
                         eval_dataset=dev_set, 
@@ -124,41 +125,24 @@ def train_main(config_path, args=None, extra_args=None):   # sourcery skip: extr
     if config.trainer_args.do_train and train_set is not None:
         logger.info('Start training...\n\n')
         trainer.train(config.resume_from_checkpoint, trial=best_run.hyperparameters if best_run is not None else None)
-        logger.info(f'Finished training, save the last states to {config.best_model_file}\n\n')
+        logger.info('---------------------------Train  Finished!  ----------------------------------\n\n')
     
-    logger.info('---------------------------Train  Finish!  ----------------------------------\n\n')
-    return config
-
-def eval_main(config_path, args=None, extra_args=None):   # sourcery skip: extract-duplicate-method
     
-    config = set_configs(config_path, args, extra_args)
-    set_seed(config.seed)
-    Evaluater.config = config
-    if config.trainer_args.do_eval or config.trainer_args.do_predict:
-        vocab, train_set, dev_set, test_set, data_collator = build_data(config)
-        Evaluater.vocab = vocab
-        trainer = MyTrainer(config, 
-                            model_init = build_model,
-                            train_dataset=train_set, 
-                            eval_dataset=dev_set, 
-                            data_collator = data_collator,
-                            compute_metrics=Evaluater.evaluate,
-                            )
-        logger.info(f'Load model state from {config.best_model_file}')
-        trainer.model.load_state_dict(torch.load(config.best_model_file))
-        if config.trainer_args.do_eval and dev_set is not None:
-            logger.info('Start dev...\n\n')
-            Evaluater.stage = 'dev'
-            trainer.evaluate(dev_set)
-            logger.info(f'Finished dev\n\n')
-        if config.trainer_args.do_predict and test_set is not None:
-            logger.info('Start testing...\n\n')
-            Evaluater.stage = 'test'
-            trainer.evaluate(test_set)
-            logger.info(f'Finished testing\n\n')
+    logger.info(f'Load model state from {config.best_model_file}')
+    trainer.model.load_state_dict(torch.load(config.best_model_file))
+    if config.trainer_args.do_eval and dev_set is not None:
+        logger.info('Start dev...')
+        Evaluater.stage = 'dev'
+        trainer.evaluate(dev_set)
+        logger.info(f'Finished dev')
+    if config.trainer_args.do_predict and test_set is not None:
+        logger.info('Start testing...')
+        Evaluater.stage = 'test'
+        trainer.evaluate(test_set)
+        logger.info(f'Finished testing')
+    
+    logger.info('---------------------------All  Finished!  ----------------------------------\n\n')
         
-        logger.info('---------------------------Test  Finish!  ----------------------------------\n\n')
 
 if __name__ == '__main__':
-    train_main('projects/RRG/main.cfg')
-    eval_main('projects/RRG/main.cfg')
+    main('projects/RRG/main.cfg')

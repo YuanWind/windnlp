@@ -5,7 +5,6 @@
 @Author  :   Yuan Wind
 @Desc    :   None
 '''
-import collections
 import copy
 import json
 import logging
@@ -13,9 +12,6 @@ import numpy as np
 import torch
 from scripts.utils import dump_json
 logger = logging.getLogger(__name__.replace('_', ''))
-from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
-
-
 
 
 def compute_objective(metrics):
@@ -33,148 +29,36 @@ class Evaluater:
     tokenizer = None
     finished_idx = 0
     res = []
-    total_loss = 0
     @staticmethod
     def evaluate():
         
         eval_res = Evaluater.res
         res_file_path = Evaluater.config.dev_pred_file if Evaluater.stage == 'dev' else Evaluater.config.test_pred_file
         dump_json(eval_res,res_file_path)
-        
-        return_res = eval_generate(eval_res)
-        return_res['total_loss'] = Evaluater.total_loss
+        P,R,F = eval_BIO(eval_res)
+        P_bio,R_bio,F_bio = eval_BIO(eval_res, tp='0')
+        return_res = {'P':float(P),'R':float(R),'F1': float(F),
+                      'P_bio':float(P_bio),'R_bio':float(R_bio),'F1_bio': float(F_bio)} 
         logger.info(json.dumps(return_res,indent=4))
         # reset 
         Evaluater.res = []
         Evaluater.finished_idx = 0
-        Evaluater.total_loss = 0
         return return_res
     
     @staticmethod
     def steps_evaluate(preds_host, inputs_host, labels_host):
+        scores= preds_host
         start = Evaluater.finished_idx
-        Evaluater.finished_idx += len(preds_host[2])
+        Evaluater.finished_idx += len(preds_host)
         end = Evaluater.finished_idx
         insts = Evaluater.vocab.dev_insts[start:end] if Evaluater.stage == 'dev' else Evaluater.vocab.test_insts[start:end]
         tokenizer = Evaluater.tokenizer
+        vocab = Evaluater.vocab
+        token_mappings = get_token_mappings(insts, tokenizer)
+        decoded_insts = decode_entities(insts, scores, token_mappings,vocab, threshold= Evaluater.config.threshold)
+        Evaluater.res.extend(decoded_insts)
+    
         
-        batch_loss,_, generate_ids = preds_host[1][0],preds_host[1][1], preds_host[2]
-        Evaluater.total_loss += batch_loss.item()
-        
-        res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True)
-        for idx, inst in enumerate(insts):
-            inst['pred'] = res[idx]
-        Evaluater.res.extend(insts)
-    
-def eval_generate(insts):
-    res_dict = {}
-    golden, infer = [], []
-    pred_ids, tgt_ids = [], []
-    for inst in insts:
-        golden.append([inst['tgt'].strip().split()])
-        infer.append(inst['pred'].strip().split())
-        one_tgt_ids = Evaluater.tokenizer(inst['tgt'], add_special_tokens = True,
-                                      padding = 'max_length', max_length = Evaluater.config.max_seq_len, 
-                                      )
-        one_pred_ids =  Evaluater.tokenizer(inst['pred'], add_special_tokens = True,
-                                      padding = 'max_length', max_length = Evaluater.config.max_seq_len, 
-                                      )
-        pred_ids.append(one_pred_ids.input_ids)
-        tgt_ids.append(one_tgt_ids.input_ids)
-    
-    ppl, acc = calc_ppl_acc(Evaluater.total_loss, pred_ids, tgt_ids)
-    res_dict["ppl"] = ppl
-    res_dict["acc"] = acc
-    
-    # eval bleu
-    chencherry = SmoothingFunction()
-    for i in range(4):
-        weights = [1 / (i + 1)] * (i + 1)
-        
-        res_dict[f"BLEU-{i}"] = round(100 * corpus_bleu(
-                golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
-    
-
-    # eval dist
-    for idx, x in enumerate(calc_diversity(infer)):
-        distinct = round(x * 100, 2)
-        res_dict[f"dist-{idx}"] = distinct
-    
-    for idx, x in enumerate(calc_diversity([x[0] for x in golden])):
-        gold_distinct = round(x * 100, 2)
-        res_dict[f"ref_dist-{idx}"] = gold_distinct
-    
-
-    # eval ent
-    ent = calc_entropy(infer)
-    for idx, x in enumerate(ent):
-        res_dict[f"ent-{idx}"] = round(x, 2)
-    
-    
-    return res_dict
-
-def calc_ppl_acc(loss, pred_ids, tgt_ids):
-    loss = torch.tensor(loss)
-    pred_ids = torch.tensor(pred_ids,dtype=int)
-    tgt_ids = torch.tensor(tgt_ids,dtype=int)
-    padding_ids = 0
-    no_padding = tgt_ids.ne(padding_ids)
-    num_correct = pred_ids.eq(tgt_ids).masked_select(no_padding)
-    correct = num_correct.sum().item()
-    num = tgt_ids.ne(0).sum()
-    acc = correct/num
-    ppl = torch.exp(min(loss/num, torch.tensor(50)))
-    return ppl.item(), acc.item()
-    
-
-def calc_diversity(hyp):
-    # based on Yizhe Zhang's code
-    
-    eps_div = 1e-10
-    tokens = [0.0, 0.0]
-    types = [collections.defaultdict(int), collections.defaultdict(int)]
-    for line in hyp:
-        for n in range(2):
-            for idx in range(len(line) - n):
-                ngram = ' '.join(line[idx:idx + n + 1])
-                types[n][ngram] = 1
-                tokens[n] += 1
-    div1 = len(types[0].keys()) / (tokens[0]+eps_div)
-    div2 = len(types[1].keys()) / (tokens[1]+eps_div)
-    return [div1, div2]
-
-
-
-def calc_entropy(hyps, n_lines=None):
-    # based on Yizhe Zhang's code
-    etp_score = [0.0, 0.0, 0.0, 0.0]
-    counter = [collections.defaultdict(int), collections.defaultdict(int), collections.defaultdict(int),
-               collections.defaultdict(int)]
-    for line in hyps:
-        for n in range(4):
-            for idx in range(len(line) - n):
-                ngram = ' '.join(line[idx:idx + n + 1])
-                counter[n][ngram] += 1
-
-    for n in range(4):
-        total = sum(counter[n].values())
-        for v in counter[n].values():
-            etp_score[n] += - v / total * (np.log(v) - np.log(total))
-
-    return etp_score
-
-
-
-
-
-
-
-
-
-
-
-
-
 def get_token_mappings(insts, tokenizer):
     token_mappings = []
     for inst in insts:

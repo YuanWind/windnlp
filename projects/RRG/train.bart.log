@@ -1,0 +1,1568 @@
+[2021-11-30 08:51:31,624 INFO] Process ID 212629, Process Parent ID 1
+[2021-11-30 08:51:31,624 INFO] Torch Version: 1.10.0
+[2021-11-30 08:51:31,943 INFO] GPU available: True
+[2021-11-30 08:51:31,943 INFO] CuDNN: True
+[2021-11-30 08:51:31,943 INFO] Namespace(data_path='./datasets', dataset='dailydialog', max_seq_size=512, learning_rate=0.0001, dropout=0.5, attn_dropout=0.5, mlm_probability=0.15, beta_1=0.9, beta_2=0.9, epsilon=1e-10, l2_reg=0.0, epochs=50, decay=0.8, decay_steps=2, gpu_ranks=[0], gpuid=[], n_gpu=1, report_step=100, valid_steps=300, clip=1.0, batch_size=100, valid_batch_size=100, data_shuffle=True, earlystop=10, inference=False, load_file='checkpoints/bart1_step_16750.pt', save_model='checkpoints/bart', checkpoint_path='./checkpoints/', keep_checkpoint=-1, model_type='bartpsd', param_init=0.1, param_init_glorot=False, pertrain_type='bart', pertrain_path='/data/xkg/projects/pertrain_model/bart-base', is_tune=True, output_attentions=True, return_dict=True, output_hidden_states=True, emb_dim=768, position_encoding=False, model_dtype='fp32', encoder_type='rnn', decoder_type='rnn', layers=-1, enc_layers=2, dec_layers=2, model_dim=768, enc_dim=500, dec_dim=500, context_gate=None, global_attention='general', global_attention_function='softmax', self_attn_type='scaled-dot', max_relative_positions=0, heads=8, transformer_ff=2048, aan_useffn=False, copy_attn=False, copy_attn_type=None, generator_function='softmax', copy_attn_force=False, reuse_copy_attn=False, copy_loss_by_seqlength=False, coverage_attn=False, lambda_coverage=0.0, loss_scale=0)
+[2021-11-30 08:51:32,029 INFO] Building train batcher ...
+[2021-11-30 08:51:33,813 INFO] Building valid batcher ...
+[2021-11-30 08:51:33,954 INFO] Building model ...
+[2021-11-30 08:51:36,644 INFO] Initializing parameters ...
+[2021-11-30 08:51:42,699 INFO] 
+BartPSD(
+  (emb2model): Linear(in_features=768, out_features=768, bias=True)
+  (bart): MyBart(
+    (bart): BartModel(
+      (shared): Embedding(50266, 768)
+      (encoder): BartEncoder(
+        (embed_tokens): Embedding(50266, 768)
+        (embed_positions): BartLearnedPositionalEmbedding(1026, 768)
+        (layers): ModuleList(
+          (0): BartEncoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (1): BartEncoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (2): BartEncoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (3): BartEncoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (4): BartEncoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (5): BartEncoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+        (layernorm_embedding): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      )
+      (decoder): BartDecoder(
+        (embed_tokens): Embedding(50266, 768)
+        (embed_positions): BartLearnedPositionalEmbedding(1026, 768)
+        (layers): ModuleList(
+          (0): BartDecoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (encoder_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (encoder_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (1): BartDecoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (encoder_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (encoder_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (2): BartDecoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (encoder_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (encoder_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (3): BartDecoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (encoder_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (encoder_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (4): BartDecoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (encoder_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (encoder_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+          (5): BartDecoderLayer(
+            (self_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (self_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (encoder_attn): BartAttention(
+              (k_proj): Linear(in_features=768, out_features=768, bias=True)
+              (v_proj): Linear(in_features=768, out_features=768, bias=True)
+              (q_proj): Linear(in_features=768, out_features=768, bias=True)
+              (out_proj): Linear(in_features=768, out_features=768, bias=True)
+            )
+            (encoder_attn_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+            (fc1): Linear(in_features=768, out_features=3072, bias=True)
+            (fc2): Linear(in_features=3072, out_features=768, bias=True)
+            (final_layer_norm): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+          )
+        )
+        (layernorm_embedding): LayerNorm((768,), eps=1e-05, elementwise_affine=True)
+      )
+    )
+  )
+  (generator): Sequential(
+    (0): Linear(in_features=768, out_features=50266, bias=True)
+    (1): Cast()
+    (2): LogSoftmax(dim=-1)
+  )
+)
+[2021-11-30 08:51:42,700 INFO] *** [ The number of the model's parameters ] ***
+[2021-11-30 08:51:42,700 INFO] embeddings: 3072
+[2021-11-30 08:51:42,700 INFO] encoder: 57498624
+[2021-11-30 08:51:42,700 INFO] decoder: 43315200
+[2021-11-30 08:51:42,700 INFO] model: 139471450
+[2021-11-30 08:51:42,701 INFO] Building trianer ...
+[2021-11-30 08:51:42,702 INFO] Start to train...
+[2021-11-30 08:51:42,702 INFO] train set: 658
+[2021-11-30 08:51:42,702 INFO] validate set: 62
+[2021-11-30 08:51:42,702 INFO] *** [ Epoch 1 / 50 ] ***
+[2021-11-30 08:52:08,066 INFO] step:    100 /  32900, during_time: 25.36, avg_loss: 6.104, accuracy: 20.946, lr: 0.0001000
+[2021-11-30 08:52:32,619 INFO] step:    200 /  32900, during_time: 49.92, avg_loss: 5.404, accuracy: 24.199, lr: 0.0001000
+[2021-11-30 08:52:57,031 INFO] step:    300 /  32900, during_time: 74.33, avg_loss: 5.077, accuracy: 26.111, lr: 0.0001000
+[2021-11-30 08:53:21,393 INFO] step:    400 /  32900, during_time: 98.69, avg_loss: 4.861, accuracy: 27.610, lr: 0.0001000
+[2021-11-30 08:53:46,021 INFO] step:    500 /  32900, during_time: 123.32, avg_loss: 4.711, accuracy: 28.634, lr: 0.0001000
+[2021-11-30 08:54:11,415 INFO] step:    600 /  32900, during_time: 148.71, avg_loss: 4.598, accuracy: 29.423, lr: 0.0001000
+[2021-11-30 08:54:25,892 INFO] step:    658 /  32900, during_time: 163.19, avg_loss: 4.542, accuracy: 29.825, lr: 0.0001000
+[2021-11-30 08:54:25,893 INFO] *** [ Epoch 2 / 50 ] ***
+[2021-11-30 08:54:50,436 INFO] step:    758 /  32900, during_time: 24.54, avg_loss: 3.905, accuracy: 34.433, lr: 0.0001000
+[2021-11-30 08:55:15,052 INFO] step:    858 /  32900, during_time: 49.16, avg_loss: 3.869, accuracy: 34.741, lr: 0.0001000
+[2021-11-30 08:55:39,598 INFO] step:    958 /  32900, during_time: 73.70, avg_loss: 3.839, accuracy: 34.948, lr: 0.0001000
+[2021-11-30 08:55:39,598 INFO] Validating ...
+[2021-11-30 08:55:47,166 INFO] Validation example number: 6133
+[2021-11-30 08:55:47,166 INFO] Validation time: 7.57
+[2021-11-30 08:55:47,166 INFO] Validation average loss: 3.326
+[2021-11-30 08:55:47,166 INFO] Validation perplexity: 27.836
+[2021-11-30 08:55:47,166 INFO] Validation accuracy: 41.915
+[2021-11-30 08:55:47,166 INFO] Model is improving acc: 0.000 --> 41.915
+[2021-11-30 08:55:47,166 INFO] Model is improving ppl: inf --> 27.836
+[2021-11-30 08:55:47,287 INFO] Saving checkpoint checkpoints/bart_step_958.pt
+[2021-11-30 08:56:15,153 INFO] step:   1058 /  32900, during_time: 109.26, avg_loss: 3.754, accuracy: 35.965, lr: 0.0001000
+[2021-11-30 08:56:39,239 INFO] step:   1158 /  32900, during_time: 133.35, avg_loss: 3.695, accuracy: 36.643, lr: 0.0001000
+[2021-11-30 08:57:04,035 INFO] step:   1258 /  32900, during_time: 158.14, avg_loss: 3.645, accuracy: 37.179, lr: 0.0001000
+[2021-11-30 08:57:04,035 INFO] Validating ...
+[2021-11-30 08:57:11,521 INFO] Validation example number: 6133
+[2021-11-30 08:57:11,521 INFO] Validation time: 7.49
+[2021-11-30 08:57:11,521 INFO] Validation average loss: 3.163
+[2021-11-30 08:57:11,521 INFO] Validation perplexity: 23.640
+[2021-11-30 08:57:11,521 INFO] Validation accuracy: 43.380
+[2021-11-30 08:57:11,521 INFO] Model is improving acc: 41.915 --> 43.380
+[2021-11-30 08:57:11,521 INFO] Model is improving ppl: 27.836 --> 23.640
+[2021-11-30 08:57:11,632 INFO] Saving checkpoint checkpoints/bart_step_1258.pt
+[2021-11-30 08:57:29,609 INFO] step:   1316 /  32900, during_time: 183.72, avg_loss: 3.617, accuracy: 37.454, lr: 0.0001000
+[2021-11-30 08:57:29,610 INFO] Validating ...
+[2021-11-30 08:57:37,108 INFO] Validation example number: 6133
+[2021-11-30 08:57:37,108 INFO] Validation time: 7.50
+[2021-11-30 08:57:37,108 INFO] Validation average loss: 3.145
+[2021-11-30 08:57:37,108 INFO] Validation perplexity: 23.218
+[2021-11-30 08:57:37,108 INFO] Validation accuracy: 43.473
+[2021-11-30 08:57:37,108 INFO] Model is improving acc: 43.380 --> 43.473
+[2021-11-30 08:57:37,108 INFO] Model is improving ppl: 23.640 --> 23.218
+[2021-11-30 08:57:37,230 INFO] Saving checkpoint checkpoints/bart_step_1316.pt
+[2021-11-30 08:57:41,207 INFO] *** [ Epoch 3 / 50 ] ***
+[2021-11-30 08:58:05,738 INFO] step:   1416 /  32900, during_time: 24.53, avg_loss: 3.588, accuracy: 36.716, lr: 0.0000800
+[2021-11-30 08:58:30,231 INFO] step:   1516 /  32900, during_time: 49.02, avg_loss: 3.542, accuracy: 37.304, lr: 0.0000800
+[2021-11-30 08:58:54,579 INFO] step:   1616 /  32900, during_time: 73.37, avg_loss: 3.517, accuracy: 37.555, lr: 0.0000800
+[2021-11-30 08:58:54,579 INFO] Validating ...
+[2021-11-30 08:59:02,066 INFO] Validation example number: 6133
+[2021-11-30 08:59:02,066 INFO] Validation time: 7.49
+[2021-11-30 08:59:02,066 INFO] Validation average loss: 3.052
+[2021-11-30 08:59:02,066 INFO] Validation perplexity: 21.153
+[2021-11-30 08:59:02,066 INFO] Validation accuracy: 44.827
+[2021-11-30 08:59:02,066 INFO] Model is improving acc: 43.473 --> 44.827
+[2021-11-30 08:59:02,066 INFO] Model is improving ppl: 23.218 --> 21.153
+[2021-11-30 08:59:02,181 INFO] Saving checkpoint checkpoints/bart_step_1616.pt
+[2021-11-30 08:59:29,803 INFO] step:   1716 /  32900, during_time: 108.60, avg_loss: 3.395, accuracy: 39.162, lr: 0.0000800
+[2021-11-30 08:59:53,755 INFO] step:   1816 /  32900, during_time: 132.55, avg_loss: 3.311, accuracy: 40.244, lr: 0.0000800
+[2021-11-30 09:00:18,477 INFO] step:   1916 /  32900, during_time: 157.27, avg_loss: 3.246, accuracy: 41.091, lr: 0.0000800
+[2021-11-30 09:00:18,478 INFO] Validating ...
+[2021-11-30 09:00:25,973 INFO] Validation example number: 6133
+[2021-11-30 09:00:25,973 INFO] Validation time: 7.50
+[2021-11-30 09:00:25,973 INFO] Validation average loss: 3.018
+[2021-11-30 09:00:25,973 INFO] Validation perplexity: 20.455
+[2021-11-30 09:00:25,973 INFO] Validation accuracy: 45.259
+[2021-11-30 09:00:25,973 INFO] Model is improving acc: 44.827 --> 45.259
+[2021-11-30 09:00:25,973 INFO] Model is improving ppl: 21.153 --> 20.455
+[2021-11-30 09:00:26,092 INFO] Saving checkpoint checkpoints/bart_step_1916.pt
+[2021-11-30 09:00:44,016 INFO] step:   1974 /  32900, during_time: 182.81, avg_loss: 3.213, accuracy: 41.503, lr: 0.0000800
+[2021-11-30 09:00:44,017 INFO] Validating ...
+[2021-11-30 09:00:51,516 INFO] Validation example number: 6133
+[2021-11-30 09:00:51,517 INFO] Validation time: 7.50
+[2021-11-30 09:00:51,517 INFO] Validation average loss: 3.008
+[2021-11-30 09:00:51,517 INFO] Validation perplexity: 20.244
+[2021-11-30 09:00:51,517 INFO] Validation accuracy: 45.357
+[2021-11-30 09:00:51,517 INFO] Model is improving acc: 45.259 --> 45.357
+[2021-11-30 09:00:51,517 INFO] Model is improving ppl: 20.455 --> 20.244
+[2021-11-30 09:00:51,636 INFO] Saving checkpoint checkpoints/bart_step_1974.pt
+[2021-11-30 09:00:55,443 INFO] *** [ Epoch 4 / 50 ] ***
+[2021-11-30 09:01:19,964 INFO] step:   2074 /  32900, during_time: 24.52, avg_loss: 3.413, accuracy: 38.479, lr: 0.0000800
+[2021-11-30 09:01:44,386 INFO] step:   2174 /  32900, during_time: 48.94, avg_loss: 3.372, accuracy: 38.908, lr: 0.0000800
+[2021-11-30 09:02:08,816 INFO] step:   2274 /  32900, during_time: 73.37, avg_loss: 3.350, accuracy: 39.115, lr: 0.0000800
+[2021-11-30 09:02:08,817 INFO] Validating ...
+[2021-11-30 09:02:16,321 INFO] Validation example number: 6133
+[2021-11-30 09:02:16,321 INFO] Validation time: 7.50
+[2021-11-30 09:02:16,321 INFO] Validation average loss: 2.941
+[2021-11-30 09:02:16,321 INFO] Validation perplexity: 18.941
+[2021-11-30 09:02:16,321 INFO] Validation accuracy: 46.171
+[2021-11-30 09:02:16,321 INFO] Model is improving acc: 45.357 --> 46.171
+[2021-11-30 09:02:16,321 INFO] Model is improving ppl: 20.244 --> 18.941
+[2021-11-30 09:02:16,434 INFO] Saving checkpoint checkpoints/bart_step_2274.pt
+[2021-11-30 09:02:44,162 INFO] step:   2374 /  32900, during_time: 108.72, avg_loss: 3.181, accuracy: 41.420, lr: 0.0000800
+[2021-11-30 09:03:08,195 INFO] step:   2474 /  32900, during_time: 132.75, avg_loss: 3.066, accuracy: 43.013, lr: 0.0000800
+[2021-11-30 09:03:33,025 INFO] step:   2574 /  32900, during_time: 157.58, avg_loss: 2.978, accuracy: 44.260, lr: 0.0000800
+[2021-11-30 09:03:33,025 INFO] Validating ...
+[2021-11-30 09:03:40,510 INFO] Validation example number: 6133
+[2021-11-30 09:03:40,510 INFO] Validation time: 7.49
+[2021-11-30 09:03:40,511 INFO] Validation average loss: 3.008
+[2021-11-30 09:03:40,511 INFO] Validation perplexity: 20.255
+[2021-11-30 09:03:40,511 INFO] Validation accuracy: 46.187
+[2021-11-30 09:03:40,511 INFO] Model is improving acc: 46.171 --> 46.187
+[2021-11-30 09:03:40,623 INFO] Saving checkpoint checkpoints/bart_step_2574.pt
+[2021-11-30 09:03:58,587 INFO] step:   2632 /  32900, during_time: 183.14, avg_loss: 2.936, accuracy: 44.857, lr: 0.0000800
+[2021-11-30 09:03:58,588 INFO] Validating ...
+[2021-11-30 09:04:06,071 INFO] Validation example number: 6133
+[2021-11-30 09:04:06,071 INFO] Validation time: 7.48
+[2021-11-30 09:04:06,071 INFO] Validation average loss: 2.993
+[2021-11-30 09:04:06,071 INFO] Validation perplexity: 19.943
+[2021-11-30 09:04:06,071 INFO] Validation accuracy: 46.372
+[2021-11-30 09:04:06,072 INFO] Model is improving acc: 46.187 --> 46.372
+[2021-11-30 09:04:06,180 INFO] Saving checkpoint checkpoints/bart_step_2632.pt
+[2021-11-30 09:04:09,881 INFO] *** [ Epoch 5 / 50 ] ***
+[2021-11-30 09:04:34,433 INFO] step:   2732 /  32900, during_time: 24.55, avg_loss: 3.259, accuracy: 40.091, lr: 0.0000640
+[2021-11-30 09:04:58,961 INFO] step:   2832 /  32900, during_time: 49.08, avg_loss: 3.215, accuracy: 40.621, lr: 0.0000640
+[2021-11-30 09:05:23,495 INFO] step:   2932 /  32900, during_time: 73.61, avg_loss: 3.186, accuracy: 40.921, lr: 0.0000640
+[2021-11-30 09:05:23,496 INFO] Validating ...
+[2021-11-30 09:05:30,997 INFO] Validation example number: 6133
+[2021-11-30 09:05:30,997 INFO] Validation time: 7.50
+[2021-11-30 09:05:30,997 INFO] Validation average loss: 2.869
+[2021-11-30 09:05:30,997 INFO] Validation perplexity: 17.618
+[2021-11-30 09:05:30,997 INFO] Validation accuracy: 47.474
+[2021-11-30 09:05:30,997 INFO] Model is improving acc: 46.372 --> 47.474
+[2021-11-30 09:05:30,997 INFO] Model is improving ppl: 18.941 --> 17.618
+[2021-11-30 09:05:31,108 INFO] Saving checkpoint checkpoints/bart_step_2932.pt
+[2021-11-30 09:05:58,783 INFO] step:   3032 /  32900, during_time: 108.90, avg_loss: 2.963, accuracy: 44.230, lr: 0.0000640
+[2021-11-30 09:06:22,839 INFO] step:   3132 /  32900, during_time: 132.96, avg_loss: 2.813, accuracy: 46.553, lr: 0.0000640
+[2021-11-30 09:06:47,545 INFO] step:   3232 /  32900, during_time: 157.66, avg_loss: 2.698, accuracy: 48.345, lr: 0.0000640
+[2021-11-30 09:06:47,545 INFO] Validating ...
+[2021-11-30 09:06:55,031 INFO] Validation example number: 6133
+[2021-11-30 09:06:55,031 INFO] Validation time: 7.49
+[2021-11-30 09:06:55,031 INFO] Validation average loss: 3.034
+[2021-11-30 09:06:55,031 INFO] Validation perplexity: 20.773
+[2021-11-30 09:06:55,031 INFO] Validation accuracy: 46.860
+[2021-11-30 09:06:55,031 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:07:09,126 INFO] step:   3290 /  32900, during_time: 179.24, avg_loss: 2.644, accuracy: 49.196, lr: 0.0000640
+[2021-11-30 09:07:09,126 INFO] Validating ...
+[2021-11-30 09:07:16,617 INFO] Validation example number: 6133
+[2021-11-30 09:07:16,617 INFO] Validation time: 7.49
+[2021-11-30 09:07:16,617 INFO] Validation average loss: 3.024
+[2021-11-30 09:07:16,617 INFO] Validation perplexity: 20.568
+[2021-11-30 09:07:16,617 INFO] Validation accuracy: 46.966
+[2021-11-30 09:07:16,617 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:07:16,618 INFO] *** [ Epoch 6 / 50 ] ***
+[2021-11-30 09:07:41,080 INFO] step:   3390 /  32900, during_time: 24.46, avg_loss: 3.155, accuracy: 41.071, lr: 0.0000640
+[2021-11-30 09:08:05,425 INFO] step:   3490 /  32900, during_time: 48.81, avg_loss: 3.098, accuracy: 41.731, lr: 0.0000640
+[2021-11-30 09:08:29,716 INFO] step:   3590 /  32900, during_time: 73.10, avg_loss: 3.074, accuracy: 42.050, lr: 0.0000640
+[2021-11-30 09:08:29,716 INFO] Validating ...
+[2021-11-30 09:08:37,198 INFO] Validation example number: 6133
+[2021-11-30 09:08:37,198 INFO] Validation time: 7.48
+[2021-11-30 09:08:37,198 INFO] Validation average loss: 2.840
+[2021-11-30 09:08:37,198 INFO] Validation perplexity: 17.108
+[2021-11-30 09:08:37,198 INFO] Validation accuracy: 48.187
+[2021-11-30 09:08:37,198 INFO] Model is improving acc: 47.474 --> 48.187
+[2021-11-30 09:08:37,198 INFO] Model is improving ppl: 17.618 --> 17.108
+[2021-11-30 09:08:37,306 INFO] Saving checkpoint checkpoints/bart_step_3590.pt
+[2021-11-30 09:09:05,630 INFO] step:   3690 /  32900, during_time: 109.01, avg_loss: 2.799, accuracy: 46.419, lr: 0.0000640
+[2021-11-30 09:09:29,648 INFO] step:   3790 /  32900, during_time: 133.03, avg_loss: 2.615, accuracy: 49.470, lr: 0.0000640
+[2021-11-30 09:09:54,495 INFO] step:   3890 /  32900, during_time: 157.88, avg_loss: 2.478, accuracy: 51.785, lr: 0.0000640
+[2021-11-30 09:09:54,495 INFO] Validating ...
+[2021-11-30 09:10:01,979 INFO] Validation example number: 6133
+[2021-11-30 09:10:01,979 INFO] Validation time: 7.48
+[2021-11-30 09:10:01,979 INFO] Validation average loss: 3.102
+[2021-11-30 09:10:01,979 INFO] Validation perplexity: 22.241
+[2021-11-30 09:10:01,979 INFO] Validation accuracy: 47.248
+[2021-11-30 09:10:01,979 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:10:16,067 INFO] step:   3948 /  32900, during_time: 179.45, avg_loss: 2.414, accuracy: 52.864, lr: 0.0000640
+[2021-11-30 09:10:16,068 INFO] Validating ...
+[2021-11-30 09:10:23,583 INFO] Validation example number: 6133
+[2021-11-30 09:10:23,583 INFO] Validation time: 7.52
+[2021-11-30 09:10:23,583 INFO] Validation average loss: 3.120
+[2021-11-30 09:10:23,583 INFO] Validation perplexity: 22.636
+[2021-11-30 09:10:23,583 INFO] Validation accuracy: 47.573
+[2021-11-30 09:10:23,583 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:10:23,583 INFO] *** [ Epoch 7 / 50 ] ***
+[2021-11-30 09:10:47,977 INFO] step:   4048 /  32900, during_time: 24.39, avg_loss: 3.056, accuracy: 42.347, lr: 0.0000512
+[2021-11-30 09:11:12,385 INFO] step:   4148 /  32900, during_time: 48.80, avg_loss: 2.994, accuracy: 43.087, lr: 0.0000512
+[2021-11-30 09:11:36,701 INFO] step:   4248 /  32900, during_time: 73.12, avg_loss: 2.965, accuracy: 43.423, lr: 0.0000512
+[2021-11-30 09:11:36,701 INFO] Validating ...
+[2021-11-30 09:11:44,192 INFO] Validation example number: 6133
+[2021-11-30 09:11:44,192 INFO] Validation time: 7.49
+[2021-11-30 09:11:44,192 INFO] Validation average loss: 2.796
+[2021-11-30 09:11:44,192 INFO] Validation perplexity: 16.381
+[2021-11-30 09:11:44,192 INFO] Validation accuracy: 48.968
+[2021-11-30 09:11:44,192 INFO] Model is improving acc: 48.187 --> 48.968
+[2021-11-30 09:11:44,192 INFO] Model is improving ppl: 17.108 --> 16.381
+[2021-11-30 09:11:44,304 INFO] Saving checkpoint checkpoints/bart_step_4248.pt
+[2021-11-30 09:12:12,808 INFO] step:   4348 /  32900, during_time: 109.22, avg_loss: 2.642, accuracy: 48.901, lr: 0.0000512
+[2021-11-30 09:12:36,757 INFO] step:   4448 /  32900, during_time: 133.17, avg_loss: 2.424, accuracy: 52.756, lr: 0.0000512
+[2021-11-30 09:13:01,490 INFO] step:   4548 /  32900, during_time: 157.91, avg_loss: 2.268, accuracy: 55.493, lr: 0.0000512
+[2021-11-30 09:13:01,490 INFO] Validating ...
+[2021-11-30 09:13:08,980 INFO] Validation example number: 6133
+[2021-11-30 09:13:08,980 INFO] Validation time: 7.49
+[2021-11-30 09:13:08,981 INFO] Validation average loss: 3.174
+[2021-11-30 09:13:08,981 INFO] Validation perplexity: 23.914
+[2021-11-30 09:13:08,981 INFO] Validation accuracy: 47.756
+[2021-11-30 09:13:08,981 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:13:23,015 INFO] step:   4606 /  32900, during_time: 179.43, avg_loss: 2.194, accuracy: 56.807, lr: 0.0000512
+[2021-11-30 09:13:23,015 INFO] Validating ...
+[2021-11-30 09:13:30,485 INFO] Validation example number: 6133
+[2021-11-30 09:13:30,486 INFO] Validation time: 7.47
+[2021-11-30 09:13:30,486 INFO] Validation average loss: 3.186
+[2021-11-30 09:13:30,486 INFO] Validation perplexity: 24.186
+[2021-11-30 09:13:30,486 INFO] Validation accuracy: 48.174
+[2021-11-30 09:13:30,486 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:13:30,486 INFO] *** [ Epoch 8 / 50 ] ***
+[2021-11-30 09:13:54,819 INFO] step:   4706 /  32900, during_time: 24.33, avg_loss: 2.993, accuracy: 43.217, lr: 0.0000512
+[2021-11-30 09:14:19,141 INFO] step:   4806 /  32900, during_time: 48.65, avg_loss: 2.921, accuracy: 44.017, lr: 0.0000512
+[2021-11-30 09:14:43,405 INFO] step:   4906 /  32900, during_time: 72.92, avg_loss: 2.885, accuracy: 44.482, lr: 0.0000512
+[2021-11-30 09:14:43,405 INFO] Validating ...
+[2021-11-30 09:14:50,889 INFO] Validation example number: 6133
+[2021-11-30 09:14:50,889 INFO] Validation time: 7.48
+[2021-11-30 09:14:50,889 INFO] Validation average loss: 2.787
+[2021-11-30 09:14:50,889 INFO] Validation perplexity: 16.227
+[2021-11-30 09:14:50,889 INFO] Validation accuracy: 49.620
+[2021-11-30 09:14:50,889 INFO] Model is improving acc: 48.968 --> 49.620
+[2021-11-30 09:14:50,889 INFO] Model is improving ppl: 16.381 --> 16.227
+[2021-11-30 09:14:50,998 INFO] Saving checkpoint checkpoints/bart_step_4906.pt
+[2021-11-30 09:15:19,175 INFO] step:   5006 /  32900, during_time: 108.69, avg_loss: 2.520, accuracy: 50.928, lr: 0.0000512
+[2021-11-30 09:15:43,067 INFO] step:   5106 /  32900, during_time: 132.58, avg_loss: 2.277, accuracy: 55.419, lr: 0.0000512
+[2021-11-30 09:16:07,732 INFO] step:   5206 /  32900, during_time: 157.25, avg_loss: 2.108, accuracy: 58.508, lr: 0.0000512
+[2021-11-30 09:16:07,732 INFO] Validating ...
+[2021-11-30 09:16:15,230 INFO] Validation example number: 6133
+[2021-11-30 09:16:15,230 INFO] Validation time: 7.50
+[2021-11-30 09:16:15,230 INFO] Validation average loss: 3.239
+[2021-11-30 09:16:15,230 INFO] Validation perplexity: 25.501
+[2021-11-30 09:16:15,230 INFO] Validation accuracy: 47.933
+[2021-11-30 09:16:15,230 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:16:29,238 INFO] step:   5264 /  32900, during_time: 178.75, avg_loss: 2.028, accuracy: 59.991, lr: 0.0000512
+[2021-11-30 09:16:29,239 INFO] Validating ...
+[2021-11-30 09:16:36,754 INFO] Validation example number: 6133
+[2021-11-30 09:16:36,755 INFO] Validation time: 7.52
+[2021-11-30 09:16:36,755 INFO] Validation average loss: 3.270
+[2021-11-30 09:16:36,755 INFO] Validation perplexity: 26.308
+[2021-11-30 09:16:36,755 INFO] Validation accuracy: 48.464
+[2021-11-30 09:16:36,755 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:16:36,755 INFO] *** [ Epoch 9 / 50 ] ***
+[2021-11-30 09:17:01,108 INFO] step:   5364 /  32900, during_time: 24.35, avg_loss: 2.937, accuracy: 44.188, lr: 0.0000410
+[2021-11-30 09:17:25,463 INFO] step:   5464 /  32900, during_time: 48.71, avg_loss: 2.847, accuracy: 45.106, lr: 0.0000410
+[2021-11-30 09:17:49,809 INFO] step:   5564 /  32900, during_time: 73.05, avg_loss: 2.809, accuracy: 45.498, lr: 0.0000410
+[2021-11-30 09:17:49,809 INFO] Validating ...
+[2021-11-30 09:17:57,283 INFO] Validation example number: 6133
+[2021-11-30 09:17:57,283 INFO] Validation time: 7.47
+[2021-11-30 09:17:57,283 INFO] Validation average loss: 2.773
+[2021-11-30 09:17:57,283 INFO] Validation perplexity: 16.005
+[2021-11-30 09:17:57,283 INFO] Validation accuracy: 50.224
+[2021-11-30 09:17:57,283 INFO] Model is improving acc: 49.620 --> 50.224
+[2021-11-30 09:17:57,283 INFO] Model is improving ppl: 16.227 --> 16.005
+[2021-11-30 09:17:57,391 INFO] Saving checkpoint checkpoints/bart_step_5564.pt
+[2021-11-30 09:18:25,623 INFO] step:   5664 /  32900, during_time: 108.87, avg_loss: 2.410, accuracy: 52.816, lr: 0.0000410
+[2021-11-30 09:18:49,616 INFO] step:   5764 /  32900, during_time: 132.86, avg_loss: 2.146, accuracy: 57.820, lr: 0.0000410
+[2021-11-30 09:19:14,294 INFO] step:   5864 /  32900, during_time: 157.54, avg_loss: 1.963, accuracy: 61.272, lr: 0.0000410
+[2021-11-30 09:19:14,294 INFO] Validating ...
+[2021-11-30 09:19:21,793 INFO] Validation example number: 6133
+[2021-11-30 09:19:21,793 INFO] Validation time: 7.50
+[2021-11-30 09:19:21,794 INFO] Validation average loss: 3.292
+[2021-11-30 09:19:21,794 INFO] Validation perplexity: 26.895
+[2021-11-30 09:19:21,794 INFO] Validation accuracy: 48.237
+[2021-11-30 09:19:21,794 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:19:35,836 INFO] step:   5922 /  32900, during_time: 179.08, avg_loss: 1.880, accuracy: 62.855, lr: 0.0000410
+[2021-11-30 09:19:35,836 INFO] Validating ...
+[2021-11-30 09:19:43,340 INFO] Validation example number: 6133
+[2021-11-30 09:19:43,340 INFO] Validation time: 7.50
+[2021-11-30 09:19:43,340 INFO] Validation average loss: 3.321
+[2021-11-30 09:19:43,340 INFO] Validation perplexity: 27.689
+[2021-11-30 09:19:43,340 INFO] Validation accuracy: 49.077
+[2021-11-30 09:19:43,340 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:19:43,340 INFO] *** [ Epoch 10 / 50 ] ***
+[2021-11-30 09:20:07,689 INFO] step:   6022 /  32900, during_time: 24.35, avg_loss: 2.877, accuracy: 44.980, lr: 0.0000410
+[2021-11-30 09:20:32,016 INFO] step:   6122 /  32900, during_time: 48.68, avg_loss: 2.785, accuracy: 45.969, lr: 0.0000410
+[2021-11-30 09:20:56,342 INFO] step:   6222 /  32900, during_time: 73.00, avg_loss: 2.748, accuracy: 46.352, lr: 0.0000410
+[2021-11-30 09:20:56,342 INFO] Validating ...
+[2021-11-30 09:21:03,835 INFO] Validation example number: 6133
+[2021-11-30 09:21:03,836 INFO] Validation time: 7.49
+[2021-11-30 09:21:03,841 INFO] Validation average loss: 2.776
+[2021-11-30 09:21:03,841 INFO] Validation perplexity: 16.059
+[2021-11-30 09:21:03,841 INFO] Validation accuracy: 50.515
+[2021-11-30 09:21:03,841 INFO] Model is improving acc: 50.224 --> 50.515
+[2021-11-30 09:21:03,950 INFO] Saving checkpoint checkpoints/bart_step_6222.pt
+[2021-11-30 09:21:32,084 INFO] step:   6322 /  32900, during_time: 108.74, avg_loss: 2.322, accuracy: 54.403, lr: 0.0000410
+[2021-11-30 09:21:56,109 INFO] step:   6422 /  32900, during_time: 132.77, avg_loss: 2.043, accuracy: 59.844, lr: 0.0000410
+[2021-11-30 09:22:20,731 INFO] step:   6522 /  32900, during_time: 157.39, avg_loss: 1.850, accuracy: 63.577, lr: 0.0000410
+[2021-11-30 09:22:20,732 INFO] Validating ...
+[2021-11-30 09:22:28,246 INFO] Validation example number: 6133
+[2021-11-30 09:22:28,246 INFO] Validation time: 7.51
+[2021-11-30 09:22:28,246 INFO] Validation average loss: 3.357
+[2021-11-30 09:22:28,247 INFO] Validation perplexity: 28.692
+[2021-11-30 09:22:28,247 INFO] Validation accuracy: 48.733
+[2021-11-30 09:22:28,247 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:22:42,381 INFO] step:   6580 /  32900, during_time: 179.04, avg_loss: 1.763, accuracy: 65.272, lr: 0.0000410
+[2021-11-30 09:22:42,381 INFO] Validating ...
+[2021-11-30 09:22:49,872 INFO] Validation example number: 6133
+[2021-11-30 09:22:49,872 INFO] Validation time: 7.49
+[2021-11-30 09:22:49,872 INFO] Validation average loss: 3.384
+[2021-11-30 09:22:49,872 INFO] Validation perplexity: 29.484
+[2021-11-30 09:22:49,872 INFO] Validation accuracy: 49.385
+[2021-11-30 09:22:49,872 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:22:49,873 INFO] *** [ Epoch 11 / 50 ] ***
+[2021-11-30 09:23:14,252 INFO] step:   6680 /  32900, during_time: 24.38, avg_loss: 2.856, accuracy: 45.403, lr: 0.0000328
+[2021-11-30 09:23:38,632 INFO] step:   6780 /  32900, during_time: 48.76, avg_loss: 2.740, accuracy: 46.625, lr: 0.0000328
+[2021-11-30 09:24:02,897 INFO] step:   6880 /  32900, during_time: 73.02, avg_loss: 2.693, accuracy: 47.146, lr: 0.0000328
+[2021-11-30 09:24:02,897 INFO] Validating ...
+[2021-11-30 09:24:10,391 INFO] Validation example number: 6133
+[2021-11-30 09:24:10,391 INFO] Validation time: 7.49
+[2021-11-30 09:24:10,391 INFO] Validation average loss: 2.777
+[2021-11-30 09:24:10,391 INFO] Validation perplexity: 16.071
+[2021-11-30 09:24:10,391 INFO] Validation accuracy: 50.965
+[2021-11-30 09:24:10,391 INFO] Model is improving acc: 50.515 --> 50.965
+[2021-11-30 09:24:10,502 INFO] Saving checkpoint checkpoints/bart_step_6880.pt
+[2021-11-30 09:24:38,477 INFO] step:   6980 /  32900, during_time: 108.60, avg_loss: 2.246, accuracy: 55.739, lr: 0.0000328
+[2021-11-30 09:25:02,336 INFO] step:   7080 /  32900, during_time: 132.46, avg_loss: 1.958, accuracy: 61.434, lr: 0.0000328
+[2021-11-30 09:25:26,975 INFO] step:   7180 /  32900, during_time: 157.10, avg_loss: 1.759, accuracy: 65.356, lr: 0.0000328
+[2021-11-30 09:25:26,976 INFO] Validating ...
+[2021-11-30 09:25:34,481 INFO] Validation example number: 6133
+[2021-11-30 09:25:34,481 INFO] Validation time: 7.51
+[2021-11-30 09:25:34,481 INFO] Validation average loss: 3.408
+[2021-11-30 09:25:34,482 INFO] Validation perplexity: 30.203
+[2021-11-30 09:25:34,482 INFO] Validation accuracy: 49.775
+[2021-11-30 09:25:34,482 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:25:48,490 INFO] step:   7238 /  32900, during_time: 178.62, avg_loss: 1.670, accuracy: 67.117, lr: 0.0000328
+[2021-11-30 09:25:48,490 INFO] Validating ...
+[2021-11-30 09:25:55,977 INFO] Validation example number: 6133
+[2021-11-30 09:25:55,978 INFO] Validation time: 7.49
+[2021-11-30 09:25:55,978 INFO] Validation average loss: 3.415
+[2021-11-30 09:25:55,978 INFO] Validation perplexity: 30.419
+[2021-11-30 09:25:55,978 INFO] Validation accuracy: 49.216
+[2021-11-30 09:25:55,978 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:25:55,978 INFO] *** [ Epoch 12 / 50 ] ***
+[2021-11-30 09:26:20,335 INFO] step:   7338 /  32900, during_time: 24.36, avg_loss: 2.806, accuracy: 46.034, lr: 0.0000328
+[2021-11-30 09:26:44,800 INFO] step:   7438 /  32900, during_time: 48.82, avg_loss: 2.692, accuracy: 47.267, lr: 0.0000328
+[2021-11-30 09:27:09,102 INFO] step:   7538 /  32900, during_time: 73.12, avg_loss: 2.644, accuracy: 47.803, lr: 0.0000328
+[2021-11-30 09:27:09,102 INFO] Validating ...
+[2021-11-30 09:27:16,586 INFO] Validation example number: 6133
+[2021-11-30 09:27:16,586 INFO] Validation time: 7.48
+[2021-11-30 09:27:16,586 INFO] Validation average loss: 2.793
+[2021-11-30 09:27:16,586 INFO] Validation perplexity: 16.333
+[2021-11-30 09:27:16,586 INFO] Validation accuracy: 51.127
+[2021-11-30 09:27:16,586 INFO] Model is improving acc: 50.965 --> 51.127
+[2021-11-30 09:27:16,697 INFO] Saving checkpoint checkpoints/bart_step_7538.pt
+[2021-11-30 09:27:44,661 INFO] step:   7638 /  32900, during_time: 108.68, avg_loss: 2.181, accuracy: 56.891, lr: 0.0000328
+[2021-11-30 09:28:08,633 INFO] step:   7738 /  32900, during_time: 132.66, avg_loss: 1.887, accuracy: 62.808, lr: 0.0000328
+[2021-11-30 09:28:33,375 INFO] step:   7838 /  32900, during_time: 157.40, avg_loss: 1.684, accuracy: 66.847, lr: 0.0000328
+[2021-11-30 09:28:33,375 INFO] Validating ...
+[2021-11-30 09:28:40,852 INFO] Validation example number: 6133
+[2021-11-30 09:28:40,852 INFO] Validation time: 7.48
+[2021-11-30 09:28:40,852 INFO] Validation average loss: 3.450
+[2021-11-30 09:28:40,852 INFO] Validation perplexity: 31.491
+[2021-11-30 09:28:40,852 INFO] Validation accuracy: 50.034
+[2021-11-30 09:28:40,852 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:28:54,869 INFO] step:   7896 /  32900, during_time: 178.89, avg_loss: 1.595, accuracy: 68.628, lr: 0.0000328
+[2021-11-30 09:28:54,869 INFO] Validating ...
+[2021-11-30 09:29:02,345 INFO] Validation example number: 6133
+[2021-11-30 09:29:02,345 INFO] Validation time: 7.48
+[2021-11-30 09:29:02,345 INFO] Validation average loss: 3.477
+[2021-11-30 09:29:02,345 INFO] Validation perplexity: 32.374
+[2021-11-30 09:29:02,345 INFO] Validation accuracy: 49.065
+[2021-11-30 09:29:02,345 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:29:02,345 INFO] *** [ Epoch 13 / 50 ] ***
+[2021-11-30 09:29:26,658 INFO] step:   7996 /  32900, during_time: 24.31, avg_loss: 2.806, accuracy: 46.348, lr: 0.0000262
+[2021-11-30 09:29:50,984 INFO] step:   8096 /  32900, during_time: 48.64, avg_loss: 2.667, accuracy: 47.779, lr: 0.0000262
+[2021-11-30 09:30:15,274 INFO] step:   8196 /  32900, during_time: 72.93, avg_loss: 2.611, accuracy: 48.387, lr: 0.0000262
+[2021-11-30 09:30:15,274 INFO] Validating ...
+[2021-11-30 09:30:22,726 INFO] Validation example number: 6133
+[2021-11-30 09:30:22,726 INFO] Validation time: 7.45
+[2021-11-30 09:30:22,726 INFO] Validation average loss: 2.797
+[2021-11-30 09:30:22,726 INFO] Validation perplexity: 16.402
+[2021-11-30 09:30:22,726 INFO] Validation accuracy: 51.624
+[2021-11-30 09:30:22,726 INFO] Model is improving acc: 51.127 --> 51.624
+[2021-11-30 09:30:22,835 INFO] Saving checkpoint checkpoints/bart_step_8196.pt
+[2021-11-30 09:30:50,925 INFO] step:   8296 /  32900, during_time: 108.58, avg_loss: 2.138, accuracy: 57.733, lr: 0.0000262
+[2021-11-30 09:31:14,861 INFO] step:   8396 /  32900, during_time: 132.52, avg_loss: 1.838, accuracy: 63.742, lr: 0.0000262
+[2021-11-30 09:31:39,452 INFO] step:   8496 /  32900, during_time: 157.11, avg_loss: 1.634, accuracy: 67.797, lr: 0.0000262
+[2021-11-30 09:31:39,452 INFO] Validating ...
+[2021-11-30 09:31:46,964 INFO] Validation example number: 6133
+[2021-11-30 09:31:46,964 INFO] Validation time: 7.51
+[2021-11-30 09:31:46,964 INFO] Validation average loss: 3.475
+[2021-11-30 09:31:46,964 INFO] Validation perplexity: 32.304
+[2021-11-30 09:31:46,964 INFO] Validation accuracy: 50.140
+[2021-11-30 09:31:46,964 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:32:01,028 INFO] step:   8554 /  32900, during_time: 178.68, avg_loss: 1.543, accuracy: 69.621, lr: 0.0000262
+[2021-11-30 09:32:01,028 INFO] Validating ...
+[2021-11-30 09:32:08,543 INFO] Validation example number: 6133
+[2021-11-30 09:32:08,543 INFO] Validation time: 7.51
+[2021-11-30 09:32:08,543 INFO] Validation average loss: 3.476
+[2021-11-30 09:32:08,543 INFO] Validation perplexity: 32.331
+[2021-11-30 09:32:08,543 INFO] Validation accuracy: 50.171
+[2021-11-30 09:32:08,543 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:32:08,544 INFO] *** [ Epoch 14 / 50 ] ***
+[2021-11-30 09:32:32,950 INFO] step:   8654 /  32900, during_time: 24.41, avg_loss: 2.770, accuracy: 46.852, lr: 0.0000262
+[2021-11-30 09:32:57,329 INFO] step:   8754 /  32900, during_time: 48.79, avg_loss: 2.624, accuracy: 48.401, lr: 0.0000262
+[2021-11-30 09:33:21,721 INFO] step:   8854 /  32900, during_time: 73.18, avg_loss: 2.568, accuracy: 49.055, lr: 0.0000262
+[2021-11-30 09:33:21,721 INFO] Validating ...
+[2021-11-30 09:33:29,284 INFO] Validation example number: 6133
+[2021-11-30 09:33:29,285 INFO] Validation time: 7.56
+[2021-11-30 09:33:29,285 INFO] Validation average loss: 2.806
+[2021-11-30 09:33:29,285 INFO] Validation perplexity: 16.548
+[2021-11-30 09:33:29,285 INFO] Validation accuracy: 51.820
+[2021-11-30 09:33:29,285 INFO] Model is improving acc: 51.624 --> 51.820
+[2021-11-30 09:33:29,394 INFO] Saving checkpoint checkpoints/bart_step_8854.pt
+[2021-11-30 09:33:57,041 INFO] step:   8954 /  32900, during_time: 108.50, avg_loss: 2.088, accuracy: 58.648, lr: 0.0000262
+[2021-11-30 09:34:20,984 INFO] step:   9054 /  32900, during_time: 132.44, avg_loss: 1.787, accuracy: 64.735, lr: 0.0000262
+[2021-11-30 09:34:45,740 INFO] step:   9154 /  32900, during_time: 157.20, avg_loss: 1.581, accuracy: 68.855, lr: 0.0000262
+[2021-11-30 09:34:45,741 INFO] Validating ...
+[2021-11-30 09:34:53,256 INFO] Validation example number: 6133
+[2021-11-30 09:34:53,283 INFO] Validation time: 7.52
+[2021-11-30 09:34:53,283 INFO] Validation average loss: 3.508
+[2021-11-30 09:34:53,283 INFO] Validation perplexity: 33.373
+[2021-11-30 09:34:53,283 INFO] Validation accuracy: 50.456
+[2021-11-30 09:34:53,283 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:35:07,321 INFO] step:   9212 /  32900, during_time: 178.78, avg_loss: 1.490, accuracy: 70.696, lr: 0.0000262
+[2021-11-30 09:35:07,321 INFO] Validating ...
+[2021-11-30 09:35:14,850 INFO] Validation example number: 6133
+[2021-11-30 09:35:14,851 INFO] Validation time: 7.53
+[2021-11-30 09:35:14,851 INFO] Validation average loss: 3.508
+[2021-11-30 09:35:14,851 INFO] Validation perplexity: 33.372
+[2021-11-30 09:35:14,851 INFO] Validation accuracy: 50.662
+[2021-11-30 09:35:14,851 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:35:14,851 INFO] *** [ Epoch 15 / 50 ] ***
+[2021-11-30 09:35:39,230 INFO] step:   9312 /  32900, during_time: 24.38, avg_loss: 2.761, accuracy: 47.067, lr: 0.0000210
+[2021-11-30 09:36:03,563 INFO] step:   9412 /  32900, during_time: 48.71, avg_loss: 2.602, accuracy: 48.863, lr: 0.0000210
+[2021-11-30 09:36:27,826 INFO] step:   9512 /  32900, during_time: 72.98, avg_loss: 2.533, accuracy: 49.664, lr: 0.0000210
+[2021-11-30 09:36:27,827 INFO] Validating ...
+[2021-11-30 09:36:35,303 INFO] Validation example number: 6133
+[2021-11-30 09:36:35,303 INFO] Validation time: 7.48
+[2021-11-30 09:36:35,303 INFO] Validation average loss: 2.818
+[2021-11-30 09:36:35,303 INFO] Validation perplexity: 16.737
+[2021-11-30 09:36:35,303 INFO] Validation accuracy: 51.983
+[2021-11-30 09:36:35,303 INFO] Model is improving acc: 51.820 --> 51.983
+[2021-11-30 09:36:35,411 INFO] Saving checkpoint checkpoints/bart_step_9512.pt
+[2021-11-30 09:37:03,052 INFO] step:   9612 /  32900, during_time: 108.20, avg_loss: 2.050, accuracy: 59.332, lr: 0.0000210
+[2021-11-30 09:37:27,022 INFO] step:   9712 /  32900, during_time: 132.17, avg_loss: 1.746, accuracy: 65.478, lr: 0.0000210
+[2021-11-30 09:37:51,671 INFO] step:   9812 /  32900, during_time: 156.82, avg_loss: 1.540, accuracy: 69.611, lr: 0.0000210
+[2021-11-30 09:37:51,672 INFO] Validating ...
+[2021-11-30 09:37:59,153 INFO] Validation example number: 6133
+[2021-11-30 09:37:59,154 INFO] Validation time: 7.48
+[2021-11-30 09:37:59,154 INFO] Validation average loss: 3.511
+[2021-11-30 09:37:59,154 INFO] Validation perplexity: 33.473
+[2021-11-30 09:37:59,154 INFO] Validation accuracy: 50.603
+[2021-11-30 09:37:59,154 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:38:13,161 INFO] step:   9870 /  32900, during_time: 178.31, avg_loss: 1.448, accuracy: 71.454, lr: 0.0000210
+[2021-11-30 09:38:13,162 INFO] Validating ...
+[2021-11-30 09:38:20,650 INFO] Validation example number: 6133
+[2021-11-30 09:38:20,650 INFO] Validation time: 7.49
+[2021-11-30 09:38:20,651 INFO] Validation average loss: 3.510
+[2021-11-30 09:38:20,651 INFO] Validation perplexity: 33.435
+[2021-11-30 09:38:20,651 INFO] Validation accuracy: 50.701
+[2021-11-30 09:38:20,651 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:38:20,651 INFO] *** [ Epoch 16 / 50 ] ***
+[2021-11-30 09:38:45,037 INFO] step:   9970 /  32900, during_time: 24.39, avg_loss: 2.712, accuracy: 47.706, lr: 0.0000210
+[2021-11-30 09:39:09,340 INFO] step:  10070 /  32900, during_time: 48.69, avg_loss: 2.555, accuracy: 49.473, lr: 0.0000210
+[2021-11-30 09:39:33,631 INFO] step:  10170 /  32900, during_time: 72.98, avg_loss: 2.491, accuracy: 50.287, lr: 0.0000210
+[2021-11-30 09:39:33,631 INFO] Validating ...
+[2021-11-30 09:39:41,131 INFO] Validation example number: 6133
+[2021-11-30 09:39:41,131 INFO] Validation time: 7.50
+[2021-11-30 09:39:41,131 INFO] Validation average loss: 2.825
+[2021-11-30 09:39:41,131 INFO] Validation perplexity: 16.869
+[2021-11-30 09:39:41,131 INFO] Validation accuracy: 52.217
+[2021-11-30 09:39:41,131 INFO] Model is improving acc: 51.983 --> 52.217
+[2021-11-30 09:39:41,239 INFO] Saving checkpoint checkpoints/bart_step_10170.pt
+[2021-11-30 09:40:09,315 INFO] step:  10270 /  32900, during_time: 108.66, avg_loss: 2.008, accuracy: 60.026, lr: 0.0000210
+[2021-11-30 09:40:33,269 INFO] step:  10370 /  32900, during_time: 132.62, avg_loss: 1.704, accuracy: 66.210, lr: 0.0000210
+[2021-11-30 09:40:57,851 INFO] step:  10470 /  32900, during_time: 157.20, avg_loss: 1.499, accuracy: 70.363, lr: 0.0000210
+[2021-11-30 09:40:57,852 INFO] Validating ...
+[2021-11-30 09:41:05,341 INFO] Validation example number: 6133
+[2021-11-30 09:41:05,341 INFO] Validation time: 7.49
+[2021-11-30 09:41:05,341 INFO] Validation average loss: 3.534
+[2021-11-30 09:41:05,341 INFO] Validation perplexity: 34.252
+[2021-11-30 09:41:05,341 INFO] Validation accuracy: 50.853
+[2021-11-30 09:41:05,341 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:41:19,335 INFO] step:  10528 /  32900, during_time: 178.68, avg_loss: 1.407, accuracy: 72.226, lr: 0.0000210
+[2021-11-30 09:41:19,336 INFO] Validating ...
+[2021-11-30 09:41:26,831 INFO] Validation example number: 6133
+[2021-11-30 09:41:26,831 INFO] Validation time: 7.49
+[2021-11-30 09:41:26,831 INFO] Validation average loss: 3.532
+[2021-11-30 09:41:26,831 INFO] Validation perplexity: 34.184
+[2021-11-30 09:41:26,831 INFO] Validation accuracy: 50.737
+[2021-11-30 09:41:26,831 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:41:26,831 INFO] *** [ Epoch 17 / 50 ] ***
+[2021-11-30 09:41:51,151 INFO] step:  10628 /  32900, during_time: 24.32, avg_loss: 2.717, accuracy: 47.930, lr: 0.0000168
+[2021-11-30 09:42:15,458 INFO] step:  10728 /  32900, during_time: 48.63, avg_loss: 2.548, accuracy: 49.791, lr: 0.0000168
+[2021-11-30 09:42:39,732 INFO] step:  10828 /  32900, during_time: 72.90, avg_loss: 2.478, accuracy: 50.653, lr: 0.0000168
+[2021-11-30 09:42:39,732 INFO] Validating ...
+[2021-11-30 09:42:47,208 INFO] Validation example number: 6133
+[2021-11-30 09:42:47,208 INFO] Validation time: 7.48
+[2021-11-30 09:42:47,208 INFO] Validation average loss: 2.829
+[2021-11-30 09:42:47,208 INFO] Validation perplexity: 16.936
+[2021-11-30 09:42:47,208 INFO] Validation accuracy: 52.349
+[2021-11-30 09:42:47,208 INFO] Model is improving acc: 52.217 --> 52.349
+[2021-11-30 09:42:47,317 INFO] Saving checkpoint checkpoints/bart_step_10828.pt
+[2021-11-30 09:43:15,076 INFO] step:  10928 /  32900, during_time: 108.24, avg_loss: 1.991, accuracy: 60.440, lr: 0.0000168
+[2021-11-30 09:43:38,943 INFO] step:  11028 /  32900, during_time: 132.11, avg_loss: 1.685, accuracy: 66.642, lr: 0.0000168
+[2021-11-30 09:44:03,587 INFO] step:  11128 /  32900, during_time: 156.76, avg_loss: 1.477, accuracy: 70.817, lr: 0.0000168
+[2021-11-30 09:44:03,587 INFO] Validating ...
+[2021-11-30 09:44:11,061 INFO] Validation example number: 6133
+[2021-11-30 09:44:11,061 INFO] Validation time: 7.47
+[2021-11-30 09:44:11,061 INFO] Validation average loss: 3.539
+[2021-11-30 09:44:11,061 INFO] Validation perplexity: 34.447
+[2021-11-30 09:44:11,061 INFO] Validation accuracy: 51.043
+[2021-11-30 09:44:11,061 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:44:25,061 INFO] step:  11186 /  32900, during_time: 178.23, avg_loss: 1.386, accuracy: 72.659, lr: 0.0000168
+[2021-11-30 09:44:25,061 INFO] Validating ...
+[2021-11-30 09:44:32,545 INFO] Validation example number: 6133
+[2021-11-30 09:44:32,545 INFO] Validation time: 7.48
+[2021-11-30 09:44:32,545 INFO] Validation average loss: 3.534
+[2021-11-30 09:44:32,545 INFO] Validation perplexity: 34.268
+[2021-11-30 09:44:32,545 INFO] Validation accuracy: 50.636
+[2021-11-30 09:44:32,545 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:44:32,545 INFO] *** [ Epoch 18 / 50 ] ***
+[2021-11-30 09:44:56,874 INFO] step:  11286 /  32900, during_time: 24.33, avg_loss: 2.698, accuracy: 48.069, lr: 0.0000168
+[2021-11-30 09:45:21,189 INFO] step:  11386 /  32900, during_time: 48.64, avg_loss: 2.520, accuracy: 50.180, lr: 0.0000168
+[2021-11-30 09:45:45,540 INFO] step:  11486 /  32900, during_time: 73.00, avg_loss: 2.454, accuracy: 50.976, lr: 0.0000168
+[2021-11-30 09:45:45,541 INFO] Validating ...
+[2021-11-30 09:45:53,030 INFO] Validation example number: 6133
+[2021-11-30 09:45:53,030 INFO] Validation time: 7.49
+[2021-11-30 09:45:53,030 INFO] Validation average loss: 2.838
+[2021-11-30 09:45:53,030 INFO] Validation perplexity: 17.087
+[2021-11-30 09:45:53,030 INFO] Validation accuracy: 52.554
+[2021-11-30 09:45:53,030 INFO] Model is improving acc: 52.349 --> 52.554
+[2021-11-30 09:45:53,138 INFO] Saving checkpoint checkpoints/bart_step_11486.pt
+[2021-11-30 09:46:21,161 INFO] step:  11586 /  32900, during_time: 108.62, avg_loss: 1.965, accuracy: 60.845, lr: 0.0000168
+[2021-11-30 09:46:45,122 INFO] step:  11686 /  32900, during_time: 132.58, avg_loss: 1.662, accuracy: 67.016, lr: 0.0000168
+[2021-11-30 09:47:09,705 INFO] step:  11786 /  32900, during_time: 157.16, avg_loss: 1.455, accuracy: 71.179, lr: 0.0000168
+[2021-11-30 09:47:09,706 INFO] Validating ...
+[2021-11-30 09:47:17,215 INFO] Validation example number: 6133
+[2021-11-30 09:47:17,215 INFO] Validation time: 7.51
+[2021-11-30 09:47:17,215 INFO] Validation average loss: 3.528
+[2021-11-30 09:47:17,215 INFO] Validation perplexity: 34.072
+[2021-11-30 09:47:17,215 INFO] Validation accuracy: 51.261
+[2021-11-30 09:47:17,215 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:47:31,276 INFO] step:  11844 /  32900, during_time: 178.73, avg_loss: 1.364, accuracy: 73.028, lr: 0.0000168
+[2021-11-30 09:47:31,276 INFO] Validating ...
+[2021-11-30 09:47:38,778 INFO] Validation example number: 6133
+[2021-11-30 09:47:38,778 INFO] Validation time: 7.50
+[2021-11-30 09:47:38,778 INFO] Validation average loss: 3.547
+[2021-11-30 09:47:38,778 INFO] Validation perplexity: 34.716
+[2021-11-30 09:47:38,778 INFO] Validation accuracy: 50.564
+[2021-11-30 09:47:38,778 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:47:38,778 INFO] *** [ Epoch 19 / 50 ] ***
+[2021-11-30 09:48:03,146 INFO] step:  11944 /  32900, during_time: 24.37, avg_loss: 2.702, accuracy: 48.079, lr: 0.0000134
+[2021-11-30 09:48:27,558 INFO] step:  12044 /  32900, during_time: 48.78, avg_loss: 2.519, accuracy: 50.212, lr: 0.0000134
+[2021-11-30 09:48:51,811 INFO] step:  12144 /  32900, during_time: 73.03, avg_loss: 2.440, accuracy: 51.233, lr: 0.0000134
+[2021-11-30 09:48:51,811 INFO] Validating ...
+[2021-11-30 09:48:59,305 INFO] Validation example number: 6133
+[2021-11-30 09:48:59,305 INFO] Validation time: 7.49
+[2021-11-30 09:48:59,305 INFO] Validation average loss: 2.850
+[2021-11-30 09:48:59,305 INFO] Validation perplexity: 17.280
+[2021-11-30 09:48:59,305 INFO] Validation accuracy: 52.613
+[2021-11-30 09:48:59,305 INFO] Model is improving acc: 52.554 --> 52.613
+[2021-11-30 09:48:59,413 INFO] Saving checkpoint checkpoints/bart_step_12144.pt
+[2021-11-30 09:49:27,471 INFO] step:  12244 /  32900, during_time: 108.69, avg_loss: 1.949, accuracy: 61.134, lr: 0.0000134
+[2021-11-30 09:49:51,347 INFO] step:  12344 /  32900, during_time: 132.57, avg_loss: 1.643, accuracy: 67.353, lr: 0.0000134
+[2021-11-30 09:50:15,910 INFO] step:  12444 /  32900, during_time: 157.13, avg_loss: 1.436, accuracy: 71.517, lr: 0.0000134
+[2021-11-30 09:50:15,910 INFO] Validating ...
+[2021-11-30 09:50:23,364 INFO] Validation example number: 6133
+[2021-11-30 09:50:23,364 INFO] Validation time: 7.45
+[2021-11-30 09:50:23,365 INFO] Validation average loss: 3.538
+[2021-11-30 09:50:23,365 INFO] Validation perplexity: 34.383
+[2021-11-30 09:50:23,365 INFO] Validation accuracy: 51.234
+[2021-11-30 09:50:23,365 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:50:37,361 INFO] step:  12502 /  32900, during_time: 178.58, avg_loss: 1.344, accuracy: 73.392, lr: 0.0000134
+[2021-11-30 09:50:37,362 INFO] Validating ...
+[2021-11-30 09:50:44,850 INFO] Validation example number: 6133
+[2021-11-30 09:50:44,850 INFO] Validation time: 7.49
+[2021-11-30 09:50:44,850 INFO] Validation average loss: 3.543
+[2021-11-30 09:50:44,850 INFO] Validation perplexity: 34.559
+[2021-11-30 09:50:44,850 INFO] Validation accuracy: 50.978
+[2021-11-30 09:50:44,850 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:50:44,850 INFO] *** [ Epoch 20 / 50 ] ***
+[2021-11-30 09:51:09,213 INFO] step:  12602 /  32900, during_time: 24.36, avg_loss: 2.673, accuracy: 48.358, lr: 0.0000134
+[2021-11-30 09:51:33,547 INFO] step:  12702 /  32900, during_time: 48.70, avg_loss: 2.497, accuracy: 50.435, lr: 0.0000134
+[2021-11-30 09:51:57,846 INFO] step:  12802 /  32900, during_time: 73.00, avg_loss: 2.420, accuracy: 51.471, lr: 0.0000134
+[2021-11-30 09:51:57,846 INFO] Validating ...
+[2021-11-30 09:52:05,328 INFO] Validation example number: 6133
+[2021-11-30 09:52:05,328 INFO] Validation time: 7.48
+[2021-11-30 09:52:05,328 INFO] Validation average loss: 2.851
+[2021-11-30 09:52:05,328 INFO] Validation perplexity: 17.304
+[2021-11-30 09:52:05,328 INFO] Validation accuracy: 52.753
+[2021-11-30 09:52:05,328 INFO] Model is improving acc: 52.613 --> 52.753
+[2021-11-30 09:52:05,435 INFO] Saving checkpoint checkpoints/bart_step_12802.pt
+[2021-11-30 09:52:33,266 INFO] step:  12902 /  32900, during_time: 108.42, avg_loss: 1.930, accuracy: 61.407, lr: 0.0000134
+[2021-11-30 09:52:57,221 INFO] step:  13002 /  32900, during_time: 132.37, avg_loss: 1.624, accuracy: 67.621, lr: 0.0000134
+[2021-11-30 09:53:21,853 INFO] step:  13102 /  32900, during_time: 157.00, avg_loss: 1.418, accuracy: 71.788, lr: 0.0000134
+[2021-11-30 09:53:21,853 INFO] Validating ...
+[2021-11-30 09:53:29,324 INFO] Validation example number: 6133
+[2021-11-30 09:53:29,325 INFO] Validation time: 7.47
+[2021-11-30 09:53:29,325 INFO] Validation average loss: 3.551
+[2021-11-30 09:53:29,325 INFO] Validation perplexity: 34.847
+[2021-11-30 09:53:29,325 INFO] Validation accuracy: 51.146
+[2021-11-30 09:53:29,325 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:53:43,312 INFO] step:  13160 /  32900, during_time: 178.46, avg_loss: 1.326, accuracy: 73.662, lr: 0.0000134
+[2021-11-30 09:53:43,312 INFO] Validating ...
+[2021-11-30 09:53:50,810 INFO] Validation example number: 6133
+[2021-11-30 09:53:50,810 INFO] Validation time: 7.50
+[2021-11-30 09:53:50,810 INFO] Validation average loss: 3.568
+[2021-11-30 09:53:50,810 INFO] Validation perplexity: 35.455
+[2021-11-30 09:53:50,810 INFO] Validation accuracy: 50.948
+[2021-11-30 09:53:50,811 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:53:50,811 INFO] *** [ Epoch 21 / 50 ] ***
+[2021-11-30 09:54:15,261 INFO] step:  13260 /  32900, during_time: 24.45, avg_loss: 2.690, accuracy: 48.560, lr: 0.0000107
+[2021-11-30 09:54:39,676 INFO] step:  13360 /  32900, during_time: 48.87, avg_loss: 2.495, accuracy: 50.689, lr: 0.0000107
+[2021-11-30 09:55:03,977 INFO] step:  13460 /  32900, during_time: 73.17, avg_loss: 2.409, accuracy: 51.790, lr: 0.0000107
+[2021-11-30 09:55:03,977 INFO] Validating ...
+[2021-11-30 09:55:11,458 INFO] Validation example number: 6133
+[2021-11-30 09:55:11,458 INFO] Validation time: 7.48
+[2021-11-30 09:55:11,458 INFO] Validation average loss: 2.860
+[2021-11-30 09:55:11,458 INFO] Validation perplexity: 17.455
+[2021-11-30 09:55:11,458 INFO] Validation accuracy: 52.877
+[2021-11-30 09:55:11,458 INFO] Model is improving acc: 52.753 --> 52.877
+[2021-11-30 09:55:11,568 INFO] Saving checkpoint checkpoints/bart_step_13460.pt
+[2021-11-30 09:55:39,761 INFO] step:  13560 /  32900, during_time: 108.95, avg_loss: 1.920, accuracy: 61.658, lr: 0.0000107
+[2021-11-30 09:56:03,723 INFO] step:  13660 /  32900, during_time: 132.91, avg_loss: 1.615, accuracy: 67.867, lr: 0.0000107
+[2021-11-30 09:56:28,365 INFO] step:  13760 /  32900, during_time: 157.55, avg_loss: 1.407, accuracy: 72.046, lr: 0.0000107
+[2021-11-30 09:56:28,366 INFO] Validating ...
+[2021-11-30 09:56:35,875 INFO] Validation example number: 6133
+[2021-11-30 09:56:35,876 INFO] Validation time: 7.51
+[2021-11-30 09:56:35,876 INFO] Validation average loss: 3.534
+[2021-11-30 09:56:35,876 INFO] Validation perplexity: 34.262
+[2021-11-30 09:56:35,876 INFO] Validation accuracy: 51.499
+[2021-11-30 09:56:35,876 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:56:49,899 INFO] step:  13818 /  32900, during_time: 179.09, avg_loss: 1.316, accuracy: 73.902, lr: 0.0000107
+[2021-11-30 09:56:49,899 INFO] Validating ...
+[2021-11-30 09:56:57,394 INFO] Validation example number: 6133
+[2021-11-30 09:56:57,394 INFO] Validation time: 7.49
+[2021-11-30 09:56:57,394 INFO] Validation average loss: 3.562
+[2021-11-30 09:56:57,394 INFO] Validation perplexity: 35.220
+[2021-11-30 09:56:57,394 INFO] Validation accuracy: 51.075
+[2021-11-30 09:56:57,394 INFO] Stalled patience: 2 / 10
+[2021-11-30 09:56:57,394 INFO] *** [ Epoch 22 / 50 ] ***
+[2021-11-30 09:57:21,793 INFO] step:  13918 /  32900, during_time: 24.40, avg_loss: 2.663, accuracy: 48.709, lr: 0.0000107
+[2021-11-30 09:57:46,136 INFO] step:  14018 /  32900, during_time: 48.74, avg_loss: 2.478, accuracy: 50.972, lr: 0.0000107
+[2021-11-30 09:58:10,450 INFO] step:  14118 /  32900, during_time: 73.06, avg_loss: 2.392, accuracy: 52.044, lr: 0.0000107
+[2021-11-30 09:58:10,450 INFO] Validating ...
+[2021-11-30 09:58:17,931 INFO] Validation example number: 6133
+[2021-11-30 09:58:17,931 INFO] Validation time: 7.48
+[2021-11-30 09:58:17,931 INFO] Validation average loss: 2.874
+[2021-11-30 09:58:17,931 INFO] Validation perplexity: 17.715
+[2021-11-30 09:58:17,931 INFO] Validation accuracy: 52.996
+[2021-11-30 09:58:17,931 INFO] Model is improving acc: 52.877 --> 52.996
+[2021-11-30 09:58:18,038 INFO] Saving checkpoint checkpoints/bart_step_14118.pt
+[2021-11-30 09:58:46,400 INFO] step:  14218 /  32900, during_time: 109.01, avg_loss: 1.901, accuracy: 61.966, lr: 0.0000107
+[2021-11-30 09:59:10,537 INFO] step:  14318 /  32900, during_time: 133.14, avg_loss: 1.595, accuracy: 68.206, lr: 0.0000107
+[2021-11-30 09:59:35,170 INFO] step:  14418 /  32900, during_time: 157.78, avg_loss: 1.389, accuracy: 72.354, lr: 0.0000107
+[2021-11-30 09:59:35,171 INFO] Validating ...
+[2021-11-30 09:59:42,678 INFO] Validation example number: 6133
+[2021-11-30 09:59:42,678 INFO] Validation time: 7.51
+[2021-11-30 09:59:42,678 INFO] Validation average loss: 3.544
+[2021-11-30 09:59:42,678 INFO] Validation perplexity: 34.597
+[2021-11-30 09:59:42,678 INFO] Validation accuracy: 51.330
+[2021-11-30 09:59:42,678 INFO] Stalled patience: 1 / 10
+[2021-11-30 09:59:56,682 INFO] step:  14476 /  32900, during_time: 179.29, avg_loss: 1.297, accuracy: 74.216, lr: 0.0000107
+[2021-11-30 09:59:56,682 INFO] Validating ...
+[2021-11-30 10:00:04,168 INFO] Validation example number: 6133
+[2021-11-30 10:00:04,169 INFO] Validation time: 7.49
+[2021-11-30 10:00:04,169 INFO] Validation average loss: 3.560
+[2021-11-30 10:00:04,169 INFO] Validation perplexity: 35.172
+[2021-11-30 10:00:04,169 INFO] Validation accuracy: 51.272
+[2021-11-30 10:00:04,169 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:00:04,169 INFO] *** [ Epoch 23 / 50 ] ***
+[2021-11-30 10:00:28,518 INFO] step:  14576 /  32900, during_time: 24.35, avg_loss: 2.674, accuracy: 48.678, lr: 0.0000086
+[2021-11-30 10:00:52,868 INFO] step:  14676 /  32900, during_time: 48.70, avg_loss: 2.481, accuracy: 51.013, lr: 0.0000086
+[2021-11-30 10:01:17,149 INFO] step:  14776 /  32900, during_time: 72.98, avg_loss: 2.393, accuracy: 52.098, lr: 0.0000086
+[2021-11-30 10:01:17,149 INFO] Validating ...
+[2021-11-30 10:01:24,644 INFO] Validation example number: 6133
+[2021-11-30 10:01:24,644 INFO] Validation time: 7.49
+[2021-11-30 10:01:24,644 INFO] Validation average loss: 2.872
+[2021-11-30 10:01:24,644 INFO] Validation perplexity: 17.677
+[2021-11-30 10:01:24,645 INFO] Validation accuracy: 53.117
+[2021-11-30 10:01:24,645 INFO] Model is improving acc: 52.996 --> 53.117
+[2021-11-30 10:01:24,754 INFO] Saving checkpoint checkpoints/bart_step_14776.pt
+[2021-11-30 10:01:52,572 INFO] step:  14876 /  32900, during_time: 108.40, avg_loss: 1.903, accuracy: 61.963, lr: 0.0000086
+[2021-11-30 10:02:16,518 INFO] step:  14976 /  32900, during_time: 132.35, avg_loss: 1.595, accuracy: 68.229, lr: 0.0000086
+[2021-11-30 10:02:41,146 INFO] step:  15076 /  32900, during_time: 156.98, avg_loss: 1.387, accuracy: 72.415, lr: 0.0000086
+[2021-11-30 10:02:41,147 INFO] Validating ...
+[2021-11-30 10:02:48,663 INFO] Validation example number: 6133
+[2021-11-30 10:02:48,664 INFO] Validation time: 7.52
+[2021-11-30 10:02:48,664 INFO] Validation average loss: 3.533
+[2021-11-30 10:02:48,664 INFO] Validation perplexity: 34.242
+[2021-11-30 10:02:48,664 INFO] Validation accuracy: 51.453
+[2021-11-30 10:02:48,664 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:03:02,700 INFO] step:  15134 /  32900, during_time: 178.53, avg_loss: 1.294, accuracy: 74.304, lr: 0.0000086
+[2021-11-30 10:03:02,700 INFO] Validating ...
+[2021-11-30 10:03:10,198 INFO] Validation example number: 6133
+[2021-11-30 10:03:10,199 INFO] Validation time: 7.50
+[2021-11-30 10:03:10,199 INFO] Validation average loss: 3.561
+[2021-11-30 10:03:10,199 INFO] Validation perplexity: 35.182
+[2021-11-30 10:03:10,199 INFO] Validation accuracy: 51.313
+[2021-11-30 10:03:10,199 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:03:10,199 INFO] *** [ Epoch 24 / 50 ] ***
+[2021-11-30 10:03:34,569 INFO] step:  15234 /  32900, during_time: 24.37, avg_loss: 2.650, accuracy: 48.902, lr: 0.0000086
+[2021-11-30 10:03:58,942 INFO] step:  15334 /  32900, during_time: 48.74, avg_loss: 2.464, accuracy: 51.210, lr: 0.0000086
+[2021-11-30 10:04:23,234 INFO] step:  15434 /  32900, during_time: 73.03, avg_loss: 2.374, accuracy: 52.329, lr: 0.0000086
+[2021-11-30 10:04:23,234 INFO] Validating ...
+[2021-11-30 10:04:30,706 INFO] Validation example number: 6133
+[2021-11-30 10:04:30,706 INFO] Validation time: 7.47
+[2021-11-30 10:04:30,706 INFO] Validation average loss: 2.883
+[2021-11-30 10:04:30,706 INFO] Validation perplexity: 17.867
+[2021-11-30 10:04:30,706 INFO] Validation accuracy: 53.248
+[2021-11-30 10:04:30,706 INFO] Model is improving acc: 53.117 --> 53.248
+[2021-11-30 10:04:30,815 INFO] Saving checkpoint checkpoints/bart_step_15434.pt
+[2021-11-30 10:04:58,492 INFO] step:  15534 /  32900, during_time: 108.29, avg_loss: 1.886, accuracy: 62.234, lr: 0.0000086
+[2021-11-30 10:05:22,365 INFO] step:  15634 /  32900, during_time: 132.17, avg_loss: 1.580, accuracy: 68.459, lr: 0.0000086
+[2021-11-30 10:05:46,965 INFO] step:  15734 /  32900, during_time: 156.77, avg_loss: 1.374, accuracy: 72.635, lr: 0.0000086
+[2021-11-30 10:05:46,965 INFO] Validating ...
+[2021-11-30 10:05:54,456 INFO] Validation example number: 6133
+[2021-11-30 10:05:54,456 INFO] Validation time: 7.49
+[2021-11-30 10:05:54,456 INFO] Validation average loss: 3.551
+[2021-11-30 10:05:54,456 INFO] Validation perplexity: 34.846
+[2021-11-30 10:05:54,456 INFO] Validation accuracy: 51.484
+[2021-11-30 10:05:54,456 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:06:08,485 INFO] step:  15792 /  32900, during_time: 178.29, avg_loss: 1.282, accuracy: 74.505, lr: 0.0000086
+[2021-11-30 10:06:08,486 INFO] Validating ...
+[2021-11-30 10:06:15,977 INFO] Validation example number: 6133
+[2021-11-30 10:06:15,977 INFO] Validation time: 7.49
+[2021-11-30 10:06:15,977 INFO] Validation average loss: 3.572
+[2021-11-30 10:06:15,977 INFO] Validation perplexity: 35.604
+[2021-11-30 10:06:15,977 INFO] Validation accuracy: 51.213
+[2021-11-30 10:06:15,977 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:06:15,978 INFO] *** [ Epoch 25 / 50 ] ***
+[2021-11-30 10:06:40,331 INFO] step:  15892 /  32900, during_time: 24.35, avg_loss: 2.667, accuracy: 49.145, lr: 0.0000069
+[2021-11-30 10:07:04,659 INFO] step:  15992 /  32900, during_time: 48.68, avg_loss: 2.472, accuracy: 51.247, lr: 0.0000069
+[2021-11-30 10:07:28,908 INFO] step:  16092 /  32900, during_time: 72.93, avg_loss: 2.379, accuracy: 52.417, lr: 0.0000069
+[2021-11-30 10:07:28,908 INFO] Validating ...
+[2021-11-30 10:07:36,377 INFO] Validation example number: 6133
+[2021-11-30 10:07:36,377 INFO] Validation time: 7.47
+[2021-11-30 10:07:36,377 INFO] Validation average loss: 2.890
+[2021-11-30 10:07:36,377 INFO] Validation perplexity: 17.992
+[2021-11-30 10:07:36,377 INFO] Validation accuracy: 53.294
+[2021-11-30 10:07:36,377 INFO] Model is improving acc: 53.248 --> 53.294
+[2021-11-30 10:07:36,487 INFO] Saving checkpoint checkpoints/bart_step_16092.pt
+[2021-11-30 10:08:04,395 INFO] step:  16192 /  32900, during_time: 108.42, avg_loss: 1.889, accuracy: 62.303, lr: 0.0000069
+[2021-11-30 10:08:28,295 INFO] step:  16292 /  32900, during_time: 132.32, avg_loss: 1.580, accuracy: 68.580, lr: 0.0000069
+[2021-11-30 10:08:52,905 INFO] step:  16392 /  32900, during_time: 156.93, avg_loss: 1.372, accuracy: 72.766, lr: 0.0000069
+[2021-11-30 10:08:52,906 INFO] Validating ...
+[2021-11-30 10:09:00,381 INFO] Validation example number: 6133
+[2021-11-30 10:09:00,381 INFO] Validation time: 7.47
+[2021-11-30 10:09:00,381 INFO] Validation average loss: 3.547
+[2021-11-30 10:09:00,381 INFO] Validation perplexity: 34.707
+[2021-11-30 10:09:00,381 INFO] Validation accuracy: 51.597
+[2021-11-30 10:09:00,381 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:09:14,412 INFO] step:  16450 /  32900, during_time: 178.43, avg_loss: 1.279, accuracy: 74.633, lr: 0.0000069
+[2021-11-30 10:09:14,412 INFO] Validating ...
+[2021-11-30 10:09:21,906 INFO] Validation example number: 6133
+[2021-11-30 10:09:21,906 INFO] Validation time: 7.49
+[2021-11-30 10:09:21,906 INFO] Validation average loss: 3.571
+[2021-11-30 10:09:21,906 INFO] Validation perplexity: 35.551
+[2021-11-30 10:09:21,906 INFO] Validation accuracy: 51.385
+[2021-11-30 10:09:21,906 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:09:21,906 INFO] *** [ Epoch 26 / 50 ] ***
+[2021-11-30 10:09:46,268 INFO] step:  16550 /  32900, during_time: 24.36, avg_loss: 2.644, accuracy: 49.051, lr: 0.0000069
+[2021-11-30 10:10:10,559 INFO] step:  16650 /  32900, during_time: 48.65, avg_loss: 2.456, accuracy: 51.297, lr: 0.0000069
+[2021-11-30 10:10:34,978 INFO] step:  16750 /  32900, during_time: 73.07, avg_loss: 2.365, accuracy: 52.501, lr: 0.0000069
+[2021-11-30 10:10:34,978 INFO] Validating ...
+[2021-11-30 10:10:42,466 INFO] Validation example number: 6133
+[2021-11-30 10:10:42,466 INFO] Validation time: 7.48
+[2021-11-30 10:10:42,466 INFO] Validation average loss: 2.891
+[2021-11-30 10:10:42,466 INFO] Validation perplexity: 18.004
+[2021-11-30 10:10:42,466 INFO] Validation accuracy: 53.412
+[2021-11-30 10:10:42,466 INFO] Model is improving acc: 53.294 --> 53.412
+[2021-11-30 10:10:42,576 INFO] Saving checkpoint checkpoints/bart_step_16750.pt
+[2021-11-30 10:11:10,300 INFO] step:  16850 /  32900, during_time: 108.39, avg_loss: 1.873, accuracy: 62.476, lr: 0.0000069
+[2021-11-30 10:11:34,145 INFO] step:  16950 /  32900, during_time: 132.24, avg_loss: 1.567, accuracy: 68.721, lr: 0.0000069
+[2021-11-30 10:11:58,730 INFO] step:  17050 /  32900, during_time: 156.82, avg_loss: 1.361, accuracy: 72.881, lr: 0.0000069
+[2021-11-30 10:11:58,730 INFO] Validating ...
+[2021-11-30 10:12:06,194 INFO] Validation example number: 6133
+[2021-11-30 10:12:06,194 INFO] Validation time: 7.46
+[2021-11-30 10:12:06,194 INFO] Validation average loss: 3.548
+[2021-11-30 10:12:06,194 INFO] Validation perplexity: 34.738
+[2021-11-30 10:12:06,194 INFO] Validation accuracy: 51.657
+[2021-11-30 10:12:06,194 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:12:20,201 INFO] step:  17108 /  32900, during_time: 178.29, avg_loss: 1.269, accuracy: 74.744, lr: 0.0000069
+[2021-11-30 10:12:20,201 INFO] Validating ...
+[2021-11-30 10:12:27,691 INFO] Validation example number: 6133
+[2021-11-30 10:12:27,691 INFO] Validation time: 7.49
+[2021-11-30 10:12:27,691 INFO] Validation average loss: 3.571
+[2021-11-30 10:12:27,691 INFO] Validation perplexity: 35.539
+[2021-11-30 10:12:27,691 INFO] Validation accuracy: 51.296
+[2021-11-30 10:12:27,691 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:12:27,691 INFO] *** [ Epoch 27 / 50 ] ***
+[2021-11-30 10:12:52,081 INFO] step:  17208 /  32900, during_time: 24.39, avg_loss: 2.680, accuracy: 48.955, lr: 0.0000055
+[2021-11-30 10:13:16,405 INFO] step:  17308 /  32900, during_time: 48.71, avg_loss: 2.477, accuracy: 51.196, lr: 0.0000055
+[2021-11-30 10:13:40,773 INFO] step:  17408 /  32900, during_time: 73.08, avg_loss: 2.381, accuracy: 52.404, lr: 0.0000055
+[2021-11-30 10:13:40,773 INFO] Validating ...
+[2021-11-30 10:13:48,271 INFO] Validation example number: 6133
+[2021-11-30 10:13:48,271 INFO] Validation time: 7.50
+[2021-11-30 10:13:48,271 INFO] Validation average loss: 2.892
+[2021-11-30 10:13:48,271 INFO] Validation perplexity: 18.033
+[2021-11-30 10:13:48,271 INFO] Validation accuracy: 53.551
+[2021-11-30 10:13:48,271 INFO] Model is improving acc: 53.412 --> 53.551
+[2021-11-30 10:13:48,380 INFO] Saving checkpoint checkpoints/bart_step_17408.pt
+[2021-11-30 10:14:16,155 INFO] step:  17508 /  32900, during_time: 108.46, avg_loss: 1.887, accuracy: 62.355, lr: 0.0000055
+[2021-11-30 10:14:40,045 INFO] step:  17608 /  32900, during_time: 132.35, avg_loss: 1.577, accuracy: 68.631, lr: 0.0000055
+[2021-11-30 10:15:04,661 INFO] step:  17708 /  32900, during_time: 156.97, avg_loss: 1.369, accuracy: 72.834, lr: 0.0000055
+[2021-11-30 10:15:04,661 INFO] Validating ...
+[2021-11-30 10:15:12,121 INFO] Validation example number: 6133
+[2021-11-30 10:15:12,121 INFO] Validation time: 7.46
+[2021-11-30 10:15:12,121 INFO] Validation average loss: 3.545
+[2021-11-30 10:15:12,121 INFO] Validation perplexity: 34.652
+[2021-11-30 10:15:12,121 INFO] Validation accuracy: 51.741
+[2021-11-30 10:15:12,121 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:15:26,127 INFO] step:  17766 /  32900, during_time: 178.44, avg_loss: 1.275, accuracy: 74.717, lr: 0.0000055
+[2021-11-30 10:15:26,127 INFO] Validating ...
+[2021-11-30 10:15:33,584 INFO] Validation example number: 6133
+[2021-11-30 10:15:33,584 INFO] Validation time: 7.46
+[2021-11-30 10:15:33,584 INFO] Validation average loss: 3.566
+[2021-11-30 10:15:33,584 INFO] Validation perplexity: 35.378
+[2021-11-30 10:15:33,584 INFO] Validation accuracy: 51.481
+[2021-11-30 10:15:33,585 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:15:33,585 INFO] *** [ Epoch 28 / 50 ] ***
+[2021-11-30 10:15:57,943 INFO] step:  17866 /  32900, during_time: 24.36, avg_loss: 2.650, accuracy: 49.333, lr: 0.0000055
+[2021-11-30 10:16:22,259 INFO] step:  17966 /  32900, during_time: 48.67, avg_loss: 2.458, accuracy: 51.490, lr: 0.0000055
+[2021-11-30 10:16:46,512 INFO] step:  18066 /  32900, during_time: 72.93, avg_loss: 2.363, accuracy: 52.661, lr: 0.0000055
+[2021-11-30 10:16:46,513 INFO] Validating ...
+[2021-11-30 10:16:53,979 INFO] Validation example number: 6133
+[2021-11-30 10:16:53,979 INFO] Validation time: 7.47
+[2021-11-30 10:16:53,979 INFO] Validation average loss: 2.901
+[2021-11-30 10:16:53,979 INFO] Validation perplexity: 18.200
+[2021-11-30 10:16:53,979 INFO] Validation accuracy: 53.617
+[2021-11-30 10:16:53,979 INFO] Model is improving acc: 53.551 --> 53.617
+[2021-11-30 10:16:54,086 INFO] Saving checkpoint checkpoints/bart_step_18066.pt
+[2021-11-30 10:17:22,213 INFO] step:  18166 /  32900, during_time: 108.63, avg_loss: 1.869, accuracy: 62.619, lr: 0.0000055
+[2021-11-30 10:17:46,124 INFO] step:  18266 /  32900, during_time: 132.54, avg_loss: 1.562, accuracy: 68.861, lr: 0.0000055
+[2021-11-30 10:18:10,884 INFO] step:  18366 /  32900, during_time: 157.30, avg_loss: 1.353, accuracy: 73.064, lr: 0.0000055
+[2021-11-30 10:18:10,884 INFO] Validating ...
+[2021-11-30 10:18:18,378 INFO] Validation example number: 6133
+[2021-11-30 10:18:18,378 INFO] Validation time: 7.49
+[2021-11-30 10:18:18,378 INFO] Validation average loss: 3.562
+[2021-11-30 10:18:18,378 INFO] Validation perplexity: 35.250
+[2021-11-30 10:18:18,378 INFO] Validation accuracy: 51.650
+[2021-11-30 10:18:18,378 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:18:32,428 INFO] step:  18424 /  32900, during_time: 178.84, avg_loss: 1.261, accuracy: 74.933, lr: 0.0000055
+[2021-11-30 10:18:32,429 INFO] Validating ...
+[2021-11-30 10:18:39,921 INFO] Validation example number: 6133
+[2021-11-30 10:18:39,922 INFO] Validation time: 7.49
+[2021-11-30 10:18:39,922 INFO] Validation average loss: 3.564
+[2021-11-30 10:18:39,922 INFO] Validation perplexity: 35.316
+[2021-11-30 10:18:39,922 INFO] Validation accuracy: 51.663
+[2021-11-30 10:18:39,922 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:18:39,922 INFO] *** [ Epoch 29 / 50 ] ***
+[2021-11-30 10:19:04,271 INFO] step:  18524 /  32900, during_time: 24.35, avg_loss: 2.673, accuracy: 49.107, lr: 0.0000044
+[2021-11-30 10:19:28,659 INFO] step:  18624 /  32900, during_time: 48.74, avg_loss: 2.473, accuracy: 51.327, lr: 0.0000044
+[2021-11-30 10:19:52,977 INFO] step:  18724 /  32900, during_time: 73.05, avg_loss: 2.371, accuracy: 52.607, lr: 0.0000044
+[2021-11-30 10:19:52,977 INFO] Validating ...
+[2021-11-30 10:20:00,467 INFO] Validation example number: 6133
+[2021-11-30 10:20:00,467 INFO] Validation time: 7.49
+[2021-11-30 10:20:00,468 INFO] Validation average loss: 2.905
+[2021-11-30 10:20:00,468 INFO] Validation perplexity: 18.267
+[2021-11-30 10:20:00,468 INFO] Validation accuracy: 53.732
+[2021-11-30 10:20:00,468 INFO] Model is improving acc: 53.617 --> 53.732
+[2021-11-30 10:20:00,578 INFO] Saving checkpoint checkpoints/bart_step_18724.pt
+[2021-11-30 10:20:28,347 INFO] step:  18824 /  32900, during_time: 108.42, avg_loss: 1.877, accuracy: 62.531, lr: 0.0000044
+[2021-11-30 10:20:52,194 INFO] step:  18924 /  32900, during_time: 132.27, avg_loss: 1.568, accuracy: 68.805, lr: 0.0000044
+[2021-11-30 10:21:16,733 INFO] step:  19024 /  32900, during_time: 156.81, avg_loss: 1.358, accuracy: 73.010, lr: 0.0000044
+[2021-11-30 10:21:16,733 INFO] Validating ...
+[2021-11-30 10:21:24,195 INFO] Validation example number: 6133
+[2021-11-30 10:21:24,195 INFO] Validation time: 7.46
+[2021-11-30 10:21:24,195 INFO] Validation average loss: 3.550
+[2021-11-30 10:21:24,195 INFO] Validation perplexity: 34.818
+[2021-11-30 10:21:24,195 INFO] Validation accuracy: 51.784
+[2021-11-30 10:21:24,196 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:21:38,193 INFO] step:  19082 /  32900, during_time: 178.27, avg_loss: 1.266, accuracy: 74.875, lr: 0.0000044
+[2021-11-30 10:21:38,193 INFO] Validating ...
+[2021-11-30 10:21:45,680 INFO] Validation example number: 6133
+[2021-11-30 10:21:45,680 INFO] Validation time: 7.49
+[2021-11-30 10:21:45,680 INFO] Validation average loss: 3.561
+[2021-11-30 10:21:45,680 INFO] Validation perplexity: 35.209
+[2021-11-30 10:21:45,680 INFO] Validation accuracy: 51.654
+[2021-11-30 10:21:45,680 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:21:45,680 INFO] *** [ Epoch 30 / 50 ] ***
+[2021-11-30 10:22:10,018 INFO] step:  19182 /  32900, during_time: 24.34, avg_loss: 2.647, accuracy: 49.659, lr: 0.0000044
+[2021-11-30 10:22:34,349 INFO] step:  19282 /  32900, during_time: 48.67, avg_loss: 2.452, accuracy: 51.797, lr: 0.0000044
+[2021-11-30 10:22:58,635 INFO] step:  19382 /  32900, during_time: 72.95, avg_loss: 2.357, accuracy: 52.930, lr: 0.0000044
+[2021-11-30 10:22:58,636 INFO] Validating ...
+[2021-11-30 10:23:06,109 INFO] Validation example number: 6133
+[2021-11-30 10:23:06,109 INFO] Validation time: 7.47
+[2021-11-30 10:23:06,109 INFO] Validation average loss: 2.900
+[2021-11-30 10:23:06,109 INFO] Validation perplexity: 18.178
+[2021-11-30 10:23:06,109 INFO] Validation accuracy: 53.687
+[2021-11-30 10:23:06,109 INFO] Stalled patience: 3 / 10
+[2021-11-30 10:23:29,758 INFO] step:  19482 /  32900, during_time: 104.08, avg_loss: 1.864, accuracy: 62.870, lr: 0.0000044
+[2021-11-30 10:23:53,683 INFO] step:  19582 /  32900, during_time: 128.00, avg_loss: 1.556, accuracy: 69.106, lr: 0.0000044
+[2021-11-30 10:24:18,267 INFO] step:  19682 /  32900, during_time: 152.59, avg_loss: 1.347, accuracy: 73.289, lr: 0.0000044
+[2021-11-30 10:24:18,267 INFO] Validating ...
+[2021-11-30 10:24:25,782 INFO] Validation example number: 6133
+[2021-11-30 10:24:25,782 INFO] Validation time: 7.51
+[2021-11-30 10:24:25,782 INFO] Validation average loss: 3.551
+[2021-11-30 10:24:25,782 INFO] Validation perplexity: 34.838
+[2021-11-30 10:24:25,782 INFO] Validation accuracy: 51.782
+[2021-11-30 10:24:25,782 INFO] Stalled patience: 4 / 10
+[2021-11-30 10:24:39,814 INFO] step:  19740 /  32900, during_time: 174.13, avg_loss: 1.255, accuracy: 75.152, lr: 0.0000044
+[2021-11-30 10:24:39,814 INFO] Validating ...
+[2021-11-30 10:24:47,307 INFO] Validation example number: 6133
+[2021-11-30 10:24:47,307 INFO] Validation time: 7.49
+[2021-11-30 10:24:47,307 INFO] Validation average loss: 3.561
+[2021-11-30 10:24:47,307 INFO] Validation perplexity: 35.186
+[2021-11-30 10:24:47,307 INFO] Validation accuracy: 51.757
+[2021-11-30 10:24:47,308 INFO] Stalled patience: 5 / 10
+[2021-11-30 10:24:47,308 INFO] *** [ Epoch 31 / 50 ] ***
+[2021-11-30 10:25:11,640 INFO] step:  19840 /  32900, during_time: 24.33, avg_loss: 2.680, accuracy: 49.244, lr: 0.0000035
+[2021-11-30 10:25:35,963 INFO] step:  19940 /  32900, during_time: 48.66, avg_loss: 2.474, accuracy: 51.533, lr: 0.0000035
+[2021-11-30 10:26:00,327 INFO] step:  20040 /  32900, during_time: 73.02, avg_loss: 2.372, accuracy: 52.798, lr: 0.0000035
+[2021-11-30 10:26:00,327 INFO] Validating ...
+[2021-11-30 10:26:07,818 INFO] Validation example number: 6133
+[2021-11-30 10:26:07,818 INFO] Validation time: 7.49
+[2021-11-30 10:26:07,818 INFO] Validation average loss: 2.909
+[2021-11-30 10:26:07,818 INFO] Validation perplexity: 18.340
+[2021-11-30 10:26:07,818 INFO] Validation accuracy: 53.793
+[2021-11-30 10:26:07,818 INFO] Model is improving acc: 53.732 --> 53.793
+[2021-11-30 10:26:07,928 INFO] Saving checkpoint checkpoints/bart_step_20040.pt
+[2021-11-30 10:26:36,068 INFO] step:  20140 /  32900, during_time: 108.76, avg_loss: 1.876, accuracy: 62.727, lr: 0.0000035
+[2021-11-30 10:26:59,977 INFO] step:  20240 /  32900, during_time: 132.67, avg_loss: 1.565, accuracy: 69.002, lr: 0.0000035
+[2021-11-30 10:27:24,671 INFO] step:  20340 /  32900, during_time: 157.36, avg_loss: 1.355, accuracy: 73.200, lr: 0.0000035
+[2021-11-30 10:27:24,671 INFO] Validating ...
+[2021-11-30 10:27:32,171 INFO] Validation example number: 6133
+[2021-11-30 10:27:32,171 INFO] Validation time: 7.50
+[2021-11-30 10:27:32,171 INFO] Validation average loss: 3.544
+[2021-11-30 10:27:32,171 INFO] Validation perplexity: 34.591
+[2021-11-30 10:27:32,171 INFO] Validation accuracy: 51.886
+[2021-11-30 10:27:32,172 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:27:46,209 INFO] step:  20398 /  32900, during_time: 178.90, avg_loss: 1.261, accuracy: 75.085, lr: 0.0000035
+[2021-11-30 10:27:46,209 INFO] Validating ...
+[2021-11-30 10:27:53,703 INFO] Validation example number: 6133
+[2021-11-30 10:27:53,703 INFO] Validation time: 7.49
+[2021-11-30 10:27:53,703 INFO] Validation average loss: 3.547
+[2021-11-30 10:27:53,703 INFO] Validation perplexity: 34.724
+[2021-11-30 10:27:53,703 INFO] Validation accuracy: 51.794
+[2021-11-30 10:27:53,703 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:27:53,704 INFO] *** [ Epoch 32 / 50 ] ***
+[2021-11-30 10:28:18,033 INFO] step:  20498 /  32900, during_time: 24.33, avg_loss: 2.662, accuracy: 49.329, lr: 0.0000035
+[2021-11-30 10:28:42,384 INFO] step:  20598 /  32900, during_time: 48.68, avg_loss: 2.456, accuracy: 51.648, lr: 0.0000035
+[2021-11-30 10:29:06,659 INFO] step:  20698 /  32900, during_time: 72.96, avg_loss: 2.359, accuracy: 52.917, lr: 0.0000035
+[2021-11-30 10:29:06,660 INFO] Validating ...
+[2021-11-30 10:29:14,144 INFO] Validation example number: 6133
+[2021-11-30 10:29:14,144 INFO] Validation time: 7.48
+[2021-11-30 10:29:14,144 INFO] Validation average loss: 2.904
+[2021-11-30 10:29:14,144 INFO] Validation perplexity: 18.246
+[2021-11-30 10:29:14,144 INFO] Validation accuracy: 53.808
+[2021-11-30 10:29:14,144 INFO] Model is improving acc: 53.793 --> 53.808
+[2021-11-30 10:29:14,255 INFO] Saving checkpoint checkpoints/bart_step_20698.pt
+[2021-11-30 10:29:42,134 INFO] step:  20798 /  32900, during_time: 108.43, avg_loss: 1.867, accuracy: 62.824, lr: 0.0000035
+[2021-11-30 10:30:05,945 INFO] step:  20898 /  32900, during_time: 132.24, avg_loss: 1.556, accuracy: 69.115, lr: 0.0000035
+[2021-11-30 10:30:30,468 INFO] step:  20998 /  32900, during_time: 156.76, avg_loss: 1.347, accuracy: 73.306, lr: 0.0000035
+[2021-11-30 10:30:30,469 INFO] Validating ...
+[2021-11-30 10:30:37,949 INFO] Validation example number: 6133
+[2021-11-30 10:30:37,949 INFO] Validation time: 7.48
+[2021-11-30 10:30:37,949 INFO] Validation average loss: 3.546
+[2021-11-30 10:30:37,949 INFO] Validation perplexity: 34.669
+[2021-11-30 10:30:37,949 INFO] Validation accuracy: 51.878
+[2021-11-30 10:30:37,950 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:30:51,994 INFO] step:  21056 /  32900, during_time: 178.29, avg_loss: 1.254, accuracy: 75.180, lr: 0.0000035
+[2021-11-30 10:30:51,994 INFO] Validating ...
+[2021-11-30 10:30:59,474 INFO] Validation example number: 6133
+[2021-11-30 10:30:59,475 INFO] Validation time: 7.48
+[2021-11-30 10:30:59,475 INFO] Validation average loss: 3.552
+[2021-11-30 10:30:59,475 INFO] Validation perplexity: 34.893
+[2021-11-30 10:30:59,475 INFO] Validation accuracy: 51.794
+[2021-11-30 10:30:59,475 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:30:59,475 INFO] *** [ Epoch 33 / 50 ] ***
+[2021-11-30 10:31:23,969 INFO] step:  21156 /  32900, during_time: 24.49, avg_loss: 2.686, accuracy: 49.277, lr: 0.0000028
+[2021-11-30 10:31:48,356 INFO] step:  21256 /  32900, during_time: 48.88, avg_loss: 2.478, accuracy: 51.596, lr: 0.0000028
+[2021-11-30 10:32:12,701 INFO] step:  21356 /  32900, during_time: 73.23, avg_loss: 2.376, accuracy: 52.735, lr: 0.0000028
+[2021-11-30 10:32:12,702 INFO] Validating ...
+[2021-11-30 10:32:20,168 INFO] Validation example number: 6133
+[2021-11-30 10:32:20,168 INFO] Validation time: 7.47
+[2021-11-30 10:32:20,168 INFO] Validation average loss: 2.920
+[2021-11-30 10:32:20,168 INFO] Validation perplexity: 18.537
+[2021-11-30 10:32:20,168 INFO] Validation accuracy: 53.905
+[2021-11-30 10:32:20,168 INFO] Model is improving acc: 53.808 --> 53.905
+[2021-11-30 10:32:20,275 INFO] Saving checkpoint checkpoints/bart_step_21356.pt
+[2021-11-30 10:32:48,156 INFO] step:  21456 /  32900, during_time: 108.68, avg_loss: 1.877, accuracy: 62.721, lr: 0.0000028
+[2021-11-30 10:33:12,031 INFO] step:  21556 /  32900, during_time: 132.56, avg_loss: 1.563, accuracy: 69.040, lr: 0.0000028
+[2021-11-30 10:33:36,653 INFO] step:  21656 /  32900, during_time: 157.18, avg_loss: 1.352, accuracy: 73.257, lr: 0.0000028
+[2021-11-30 10:33:36,653 INFO] Validating ...
+[2021-11-30 10:33:44,133 INFO] Validation example number: 6133
+[2021-11-30 10:33:44,134 INFO] Validation time: 7.48
+[2021-11-30 10:33:44,134 INFO] Validation average loss: 3.539
+[2021-11-30 10:33:44,134 INFO] Validation perplexity: 34.420
+[2021-11-30 10:33:44,134 INFO] Validation accuracy: 51.903
+[2021-11-30 10:33:44,134 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:33:58,153 INFO] step:  21714 /  32900, during_time: 178.68, avg_loss: 1.258, accuracy: 75.145, lr: 0.0000028
+[2021-11-30 10:33:58,154 INFO] Validating ...
+[2021-11-30 10:34:05,660 INFO] Validation example number: 6133
+[2021-11-30 10:34:05,660 INFO] Validation time: 7.51
+[2021-11-30 10:34:05,660 INFO] Validation average loss: 3.558
+[2021-11-30 10:34:05,660 INFO] Validation perplexity: 35.081
+[2021-11-30 10:34:05,660 INFO] Validation accuracy: 51.787
+[2021-11-30 10:34:05,660 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:34:05,660 INFO] *** [ Epoch 34 / 50 ] ***
+[2021-11-30 10:34:30,049 INFO] step:  21814 /  32900, during_time: 24.39, avg_loss: 2.684, accuracy: 49.393, lr: 0.0000028
+[2021-11-30 10:34:54,372 INFO] step:  21914 /  32900, during_time: 48.71, avg_loss: 2.471, accuracy: 51.639, lr: 0.0000028
+[2021-11-30 10:35:18,636 INFO] step:  22014 /  32900, during_time: 72.98, avg_loss: 2.368, accuracy: 52.855, lr: 0.0000028
+[2021-11-30 10:35:18,637 INFO] Validating ...
+[2021-11-30 10:35:26,109 INFO] Validation example number: 6133
+[2021-11-30 10:35:26,110 INFO] Validation time: 7.47
+[2021-11-30 10:35:26,110 INFO] Validation average loss: 2.928
+[2021-11-30 10:35:26,110 INFO] Validation perplexity: 18.694
+[2021-11-30 10:35:26,110 INFO] Validation accuracy: 53.911
+[2021-11-30 10:35:26,110 INFO] Model is improving acc: 53.905 --> 53.911
+[2021-11-30 10:35:26,217 INFO] Saving checkpoint checkpoints/bart_step_22014.pt
+[2021-11-30 10:35:53,704 INFO] step:  22114 /  32900, during_time: 108.04, avg_loss: 1.870, accuracy: 62.829, lr: 0.0000028
+[2021-11-30 10:36:17,525 INFO] step:  22214 /  32900, during_time: 131.86, avg_loss: 1.558, accuracy: 69.127, lr: 0.0000028
+[2021-11-30 10:36:42,140 INFO] step:  22314 /  32900, during_time: 156.48, avg_loss: 1.347, accuracy: 73.332, lr: 0.0000028
+[2021-11-30 10:36:42,141 INFO] Validating ...
+[2021-11-30 10:36:49,617 INFO] Validation example number: 6133
+[2021-11-30 10:36:49,617 INFO] Validation time: 7.48
+[2021-11-30 10:36:49,617 INFO] Validation average loss: 3.544
+[2021-11-30 10:36:49,617 INFO] Validation perplexity: 34.611
+[2021-11-30 10:36:49,618 INFO] Validation accuracy: 51.891
+[2021-11-30 10:36:49,618 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:37:03,667 INFO] step:  22372 /  32900, during_time: 178.01, avg_loss: 1.254, accuracy: 75.218, lr: 0.0000028
+[2021-11-30 10:37:03,667 INFO] Validating ...
+[2021-11-30 10:37:11,152 INFO] Validation example number: 6133
+[2021-11-30 10:37:11,152 INFO] Validation time: 7.48
+[2021-11-30 10:37:11,152 INFO] Validation average loss: 3.547
+[2021-11-30 10:37:11,153 INFO] Validation perplexity: 34.720
+[2021-11-30 10:37:11,153 INFO] Validation accuracy: 51.871
+[2021-11-30 10:37:11,153 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:37:11,153 INFO] *** [ Epoch 35 / 50 ] ***
+[2021-11-30 10:37:35,453 INFO] step:  22472 /  32900, during_time: 24.30, avg_loss: 2.705, accuracy: 49.269, lr: 0.0000023
+[2021-11-30 10:37:59,764 INFO] step:  22572 /  32900, during_time: 48.61, avg_loss: 2.485, accuracy: 51.554, lr: 0.0000023
+[2021-11-30 10:38:24,044 INFO] step:  22672 /  32900, during_time: 72.89, avg_loss: 2.384, accuracy: 52.696, lr: 0.0000023
+[2021-11-30 10:38:24,044 INFO] Validating ...
+[2021-11-30 10:38:31,534 INFO] Validation example number: 6133
+[2021-11-30 10:38:31,534 INFO] Validation time: 7.49
+[2021-11-30 10:38:31,534 INFO] Validation average loss: 2.932
+[2021-11-30 10:38:31,534 INFO] Validation perplexity: 18.766
+[2021-11-30 10:38:31,534 INFO] Validation accuracy: 53.934
+[2021-11-30 10:38:31,534 INFO] Model is improving acc: 53.911 --> 53.934
+[2021-11-30 10:38:31,644 INFO] Saving checkpoint checkpoints/bart_step_22672.pt
+[2021-11-30 10:38:59,800 INFO] step:  22772 /  32900, during_time: 108.65, avg_loss: 1.885, accuracy: 62.637, lr: 0.0000023
+[2021-11-30 10:39:23,802 INFO] step:  22872 /  32900, during_time: 132.65, avg_loss: 1.570, accuracy: 68.959, lr: 0.0000023
+[2021-11-30 10:39:48,441 INFO] step:  22972 /  32900, during_time: 157.29, avg_loss: 1.357, accuracy: 73.205, lr: 0.0000023
+[2021-11-30 10:39:48,441 INFO] Validating ...
+[2021-11-30 10:39:55,918 INFO] Validation example number: 6133
+[2021-11-30 10:39:55,918 INFO] Validation time: 7.48
+[2021-11-30 10:39:55,918 INFO] Validation average loss: 3.535
+[2021-11-30 10:39:55,918 INFO] Validation perplexity: 34.294
+[2021-11-30 10:39:55,918 INFO] Validation accuracy: 51.957
+[2021-11-30 10:39:55,918 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:40:09,914 INFO] step:  23030 /  32900, during_time: 178.76, avg_loss: 1.263, accuracy: 75.098, lr: 0.0000023
+[2021-11-30 10:40:09,915 INFO] Validating ...
+[2021-11-30 10:40:17,407 INFO] Validation example number: 6133
+[2021-11-30 10:40:17,407 INFO] Validation time: 7.49
+[2021-11-30 10:40:17,407 INFO] Validation average loss: 3.536
+[2021-11-30 10:40:17,407 INFO] Validation perplexity: 34.313
+[2021-11-30 10:40:17,407 INFO] Validation accuracy: 51.897
+[2021-11-30 10:40:17,407 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:40:17,407 INFO] *** [ Epoch 36 / 50 ] ***
+[2021-11-30 10:40:41,722 INFO] step:  23130 /  32900, during_time: 24.31, avg_loss: 2.684, accuracy: 49.472, lr: 0.0000023
+[2021-11-30 10:41:06,025 INFO] step:  23230 /  32900, during_time: 48.62, avg_loss: 2.466, accuracy: 51.787, lr: 0.0000023
+[2021-11-30 10:41:30,370 INFO] step:  23330 /  32900, during_time: 72.96, avg_loss: 2.363, accuracy: 52.998, lr: 0.0000023
+[2021-11-30 10:41:30,370 INFO] Validating ...
+[2021-11-30 10:41:37,872 INFO] Validation example number: 6133
+[2021-11-30 10:41:37,873 INFO] Validation time: 7.50
+[2021-11-30 10:41:37,873 INFO] Validation average loss: 2.936
+[2021-11-30 10:41:37,873 INFO] Validation perplexity: 18.836
+[2021-11-30 10:41:37,873 INFO] Validation accuracy: 53.970
+[2021-11-30 10:41:37,873 INFO] Model is improving acc: 53.934 --> 53.970
+[2021-11-30 10:41:37,982 INFO] Saving checkpoint checkpoints/bart_step_23330.pt
+[2021-11-30 10:42:06,282 INFO] step:  23430 /  32900, during_time: 108.87, avg_loss: 1.867, accuracy: 62.909, lr: 0.0000023
+[2021-11-30 10:42:30,156 INFO] step:  23530 /  32900, during_time: 132.75, avg_loss: 1.554, accuracy: 69.225, lr: 0.0000023
+[2021-11-30 10:42:54,794 INFO] step:  23630 /  32900, during_time: 157.39, avg_loss: 1.344, accuracy: 73.420, lr: 0.0000023
+[2021-11-30 10:42:54,794 INFO] Validating ...
+[2021-11-30 10:43:02,273 INFO] Validation example number: 6133
+[2021-11-30 10:43:02,274 INFO] Validation time: 7.48
+[2021-11-30 10:43:02,274 INFO] Validation average loss: 3.535
+[2021-11-30 10:43:02,274 INFO] Validation perplexity: 34.312
+[2021-11-30 10:43:02,274 INFO] Validation accuracy: 51.987
+[2021-11-30 10:43:02,274 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:43:16,379 INFO] step:  23688 /  32900, during_time: 178.97, avg_loss: 1.250, accuracy: 75.298, lr: 0.0000023
+[2021-11-30 10:43:16,379 INFO] Validating ...
+[2021-11-30 10:43:23,889 INFO] Validation example number: 6133
+[2021-11-30 10:43:23,889 INFO] Validation time: 7.51
+[2021-11-30 10:43:23,889 INFO] Validation average loss: 3.541
+[2021-11-30 10:43:23,889 INFO] Validation perplexity: 34.491
+[2021-11-30 10:43:23,889 INFO] Validation accuracy: 51.923
+[2021-11-30 10:43:23,889 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:43:23,889 INFO] *** [ Epoch 37 / 50 ] ***
+[2021-11-30 10:43:48,229 INFO] step:  23788 /  32900, during_time: 24.34, avg_loss: 2.704, accuracy: 49.413, lr: 0.0000018
+[2021-11-30 10:44:12,570 INFO] step:  23888 /  32900, during_time: 48.68, avg_loss: 2.487, accuracy: 51.581, lr: 0.0000018
+[2021-11-30 10:44:36,875 INFO] step:  23988 /  32900, during_time: 72.99, avg_loss: 2.383, accuracy: 52.817, lr: 0.0000018
+[2021-11-30 10:44:36,875 INFO] Validating ...
+[2021-11-30 10:44:44,326 INFO] Validation example number: 6133
+[2021-11-30 10:44:44,326 INFO] Validation time: 7.45
+[2021-11-30 10:44:44,326 INFO] Validation average loss: 2.943
+[2021-11-30 10:44:44,326 INFO] Validation perplexity: 18.970
+[2021-11-30 10:44:44,326 INFO] Validation accuracy: 53.990
+[2021-11-30 10:44:44,327 INFO] Model is improving acc: 53.970 --> 53.990
+[2021-11-30 10:44:44,435 INFO] Saving checkpoint checkpoints/bart_step_23988.pt
+[2021-11-30 10:45:12,445 INFO] step:  24088 /  32900, during_time: 108.56, avg_loss: 1.883, accuracy: 62.767, lr: 0.0000018
+[2021-11-30 10:45:36,343 INFO] step:  24188 /  32900, during_time: 132.45, avg_loss: 1.567, accuracy: 69.088, lr: 0.0000018
+[2021-11-30 10:46:00,955 INFO] step:  24288 /  32900, during_time: 157.07, avg_loss: 1.354, accuracy: 73.315, lr: 0.0000018
+[2021-11-30 10:46:00,955 INFO] Validating ...
+[2021-11-30 10:46:08,452 INFO] Validation example number: 6133
+[2021-11-30 10:46:08,452 INFO] Validation time: 7.50
+[2021-11-30 10:46:08,452 INFO] Validation average loss: 3.533
+[2021-11-30 10:46:08,452 INFO] Validation perplexity: 34.212
+[2021-11-30 10:46:08,452 INFO] Validation accuracy: 52.047
+[2021-11-30 10:46:08,452 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:46:22,408 INFO] step:  24346 /  32900, during_time: 178.52, avg_loss: 1.259, accuracy: 75.224, lr: 0.0000018
+[2021-11-30 10:46:22,408 INFO] Validating ...
+[2021-11-30 10:46:29,889 INFO] Validation example number: 6133
+[2021-11-30 10:46:29,889 INFO] Validation time: 7.48
+[2021-11-30 10:46:29,889 INFO] Validation average loss: 3.534
+[2021-11-30 10:46:29,889 INFO] Validation perplexity: 34.265
+[2021-11-30 10:46:29,889 INFO] Validation accuracy: 51.959
+[2021-11-30 10:46:29,889 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:46:29,889 INFO] *** [ Epoch 38 / 50 ] ***
+[2021-11-30 10:46:54,214 INFO] step:  24446 /  32900, during_time: 24.32, avg_loss: 2.693, accuracy: 49.566, lr: 0.0000018
+[2021-11-30 10:47:18,510 INFO] step:  24546 /  32900, during_time: 48.62, avg_loss: 2.476, accuracy: 51.748, lr: 0.0000018
+[2021-11-30 10:47:42,725 INFO] step:  24646 /  32900, during_time: 72.84, avg_loss: 2.372, accuracy: 52.946, lr: 0.0000018
+[2021-11-30 10:47:42,725 INFO] Validating ...
+[2021-11-30 10:47:50,196 INFO] Validation example number: 6133
+[2021-11-30 10:47:50,196 INFO] Validation time: 7.47
+[2021-11-30 10:47:50,196 INFO] Validation average loss: 2.948
+[2021-11-30 10:47:50,196 INFO] Validation perplexity: 19.067
+[2021-11-30 10:47:50,196 INFO] Validation accuracy: 54.014
+[2021-11-30 10:47:50,196 INFO] Model is improving acc: 53.990 --> 54.014
+[2021-11-30 10:47:50,306 INFO] Saving checkpoint checkpoints/bart_step_24646.pt
+[2021-11-30 10:48:18,285 INFO] step:  24746 /  32900, during_time: 108.40, avg_loss: 1.875, accuracy: 62.866, lr: 0.0000018
+[2021-11-30 10:48:42,174 INFO] step:  24846 /  32900, during_time: 132.28, avg_loss: 1.561, accuracy: 69.183, lr: 0.0000018
+[2021-11-30 10:49:06,825 INFO] step:  24946 /  32900, during_time: 156.94, avg_loss: 1.348, accuracy: 73.419, lr: 0.0000018
+[2021-11-30 10:49:06,825 INFO] Validating ...
+[2021-11-30 10:49:14,316 INFO] Validation example number: 6133
+[2021-11-30 10:49:14,316 INFO] Validation time: 7.49
+[2021-11-30 10:49:14,316 INFO] Validation average loss: 3.529
+[2021-11-30 10:49:14,316 INFO] Validation perplexity: 34.094
+[2021-11-30 10:49:14,316 INFO] Validation accuracy: 52.031
+[2021-11-30 10:49:14,316 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:49:28,393 INFO] step:  25004 /  32900, during_time: 178.50, avg_loss: 1.254, accuracy: 75.311, lr: 0.0000018
+[2021-11-30 10:49:28,393 INFO] Validating ...
+[2021-11-30 10:49:35,876 INFO] Validation example number: 6133
+[2021-11-30 10:49:35,876 INFO] Validation time: 7.48
+[2021-11-30 10:49:35,876 INFO] Validation average loss: 3.531
+[2021-11-30 10:49:35,876 INFO] Validation perplexity: 34.166
+[2021-11-30 10:49:35,876 INFO] Validation accuracy: 52.051
+[2021-11-30 10:49:35,876 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:49:35,876 INFO] *** [ Epoch 39 / 50 ] ***
+[2021-11-30 10:50:00,271 INFO] step:  25104 /  32900, during_time: 24.39, avg_loss: 2.716, accuracy: 49.497, lr: 0.0000014
+[2021-11-30 10:50:24,555 INFO] step:  25204 /  32900, during_time: 48.68, avg_loss: 2.491, accuracy: 51.723, lr: 0.0000014
+[2021-11-30 10:50:48,758 INFO] step:  25304 /  32900, during_time: 72.88, avg_loss: 2.387, accuracy: 52.875, lr: 0.0000014
+[2021-11-30 10:50:48,758 INFO] Validating ...
+[2021-11-30 10:50:56,248 INFO] Validation example number: 6133
+[2021-11-30 10:50:56,249 INFO] Validation time: 7.49
+[2021-11-30 10:50:56,249 INFO] Validation average loss: 2.958
+[2021-11-30 10:50:56,249 INFO] Validation perplexity: 19.254
+[2021-11-30 10:50:56,249 INFO] Validation accuracy: 54.044
+[2021-11-30 10:50:56,249 INFO] Model is improving acc: 54.014 --> 54.044
+[2021-11-30 10:50:56,373 INFO] Saving checkpoint checkpoints/bart_step_25304.pt
+[2021-11-30 10:51:24,362 INFO] step:  25404 /  32900, during_time: 108.49, avg_loss: 1.886, accuracy: 62.807, lr: 0.0000014
+[2021-11-30 10:51:48,160 INFO] step:  25504 /  32900, during_time: 132.28, avg_loss: 1.570, accuracy: 69.118, lr: 0.0000014
+[2021-11-30 10:52:12,713 INFO] step:  25604 /  32900, during_time: 156.84, avg_loss: 1.355, accuracy: 73.368, lr: 0.0000014
+[2021-11-30 10:52:12,713 INFO] Validating ...
+[2021-11-30 10:52:20,183 INFO] Validation example number: 6133
+[2021-11-30 10:52:20,183 INFO] Validation time: 7.47
+[2021-11-30 10:52:20,183 INFO] Validation average loss: 3.525
+[2021-11-30 10:52:20,183 INFO] Validation perplexity: 33.946
+[2021-11-30 10:52:20,183 INFO] Validation accuracy: 52.024
+[2021-11-30 10:52:20,183 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:52:34,166 INFO] step:  25662 /  32900, during_time: 178.29, avg_loss: 1.260, accuracy: 75.267, lr: 0.0000014
+[2021-11-30 10:52:34,166 INFO] Validating ...
+[2021-11-30 10:52:41,637 INFO] Validation example number: 6133
+[2021-11-30 10:52:41,638 INFO] Validation time: 7.47
+[2021-11-30 10:52:41,638 INFO] Validation average loss: 3.528
+[2021-11-30 10:52:41,638 INFO] Validation perplexity: 34.045
+[2021-11-30 10:52:41,638 INFO] Validation accuracy: 51.999
+[2021-11-30 10:52:41,638 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:52:41,638 INFO] *** [ Epoch 40 / 50 ] ***
+[2021-11-30 10:53:06,007 INFO] step:  25762 /  32900, during_time: 24.37, avg_loss: 2.684, accuracy: 49.888, lr: 0.0000014
+[2021-11-30 10:53:30,319 INFO] step:  25862 /  32900, during_time: 48.68, avg_loss: 2.472, accuracy: 52.020, lr: 0.0000014
+[2021-11-30 10:53:54,604 INFO] step:  25962 /  32900, during_time: 72.97, avg_loss: 2.369, accuracy: 53.170, lr: 0.0000014
+[2021-11-30 10:53:54,604 INFO] Validating ...
+[2021-11-30 10:54:02,086 INFO] Validation example number: 6133
+[2021-11-30 10:54:02,086 INFO] Validation time: 7.48
+[2021-11-30 10:54:02,086 INFO] Validation average loss: 2.963
+[2021-11-30 10:54:02,086 INFO] Validation perplexity: 19.354
+[2021-11-30 10:54:02,086 INFO] Validation accuracy: 54.087
+[2021-11-30 10:54:02,086 INFO] Model is improving acc: 54.044 --> 54.087
+[2021-11-30 10:54:02,195 INFO] Saving checkpoint checkpoints/bart_step_25962.pt
+[2021-11-30 10:54:29,970 INFO] step:  26062 /  32900, during_time: 108.33, avg_loss: 1.869, accuracy: 63.077, lr: 0.0000014
+[2021-11-30 10:54:53,862 INFO] step:  26162 /  32900, during_time: 132.22, avg_loss: 1.556, accuracy: 69.351, lr: 0.0000014
+[2021-11-30 10:55:18,429 INFO] step:  26262 /  32900, during_time: 156.79, avg_loss: 1.344, accuracy: 73.565, lr: 0.0000014
+[2021-11-30 10:55:18,429 INFO] Validating ...
+[2021-11-30 10:55:25,908 INFO] Validation example number: 6133
+[2021-11-30 10:55:25,909 INFO] Validation time: 7.48
+[2021-11-30 10:55:25,909 INFO] Validation average loss: 3.524
+[2021-11-30 10:55:25,909 INFO] Validation perplexity: 33.916
+[2021-11-30 10:55:25,909 INFO] Validation accuracy: 52.040
+[2021-11-30 10:55:25,909 INFO] Stalled patience: 1 / 10
+[2021-11-30 10:55:39,863 INFO] step:  26320 /  32900, during_time: 178.22, avg_loss: 1.249, accuracy: 75.453, lr: 0.0000014
+[2021-11-30 10:55:39,863 INFO] Validating ...
+[2021-11-30 10:55:47,320 INFO] Validation example number: 6133
+[2021-11-30 10:55:47,320 INFO] Validation time: 7.46
+[2021-11-30 10:55:47,320 INFO] Validation average loss: 3.530
+[2021-11-30 10:55:47,320 INFO] Validation perplexity: 34.122
+[2021-11-30 10:55:47,320 INFO] Validation accuracy: 52.041
+[2021-11-30 10:55:47,320 INFO] Stalled patience: 2 / 10
+[2021-11-30 10:55:47,320 INFO] *** [ Epoch 41 / 50 ] ***
+[2021-11-30 10:56:11,640 INFO] step:  26420 /  32900, during_time: 24.32, avg_loss: 2.709, accuracy: 49.579, lr: 0.0000012
+[2021-11-30 10:56:35,974 INFO] step:  26520 /  32900, during_time: 48.65, avg_loss: 2.492, accuracy: 51.722, lr: 0.0000012
+[2021-11-30 10:57:00,305 INFO] step:  26620 /  32900, during_time: 72.99, avg_loss: 2.384, accuracy: 52.949, lr: 0.0000012
+[2021-11-30 10:57:00,306 INFO] Validating ...
+[2021-11-30 10:57:07,806 INFO] Validation example number: 6133
+[2021-11-30 10:57:07,806 INFO] Validation time: 7.50
+[2021-11-30 10:57:07,806 INFO] Validation average loss: 2.981
+[2021-11-30 10:57:07,806 INFO] Validation perplexity: 19.700
+[2021-11-30 10:57:07,806 INFO] Validation accuracy: 54.080
+[2021-11-30 10:57:07,806 INFO] Stalled patience: 3 / 10
+[2021-11-30 10:57:31,921 INFO] step:  26720 /  32900, during_time: 104.60, avg_loss: 1.883, accuracy: 62.885, lr: 0.0000012
+[2021-11-30 10:57:55,877 INFO] step:  26820 /  32900, during_time: 128.56, avg_loss: 1.567, accuracy: 69.184, lr: 0.0000012
+[2021-11-30 10:58:20,594 INFO] step:  26920 /  32900, during_time: 153.27, avg_loss: 1.352, accuracy: 73.439, lr: 0.0000012
+[2021-11-30 10:58:20,594 INFO] Validating ...
+[2021-11-30 10:58:28,074 INFO] Validation example number: 6133
+[2021-11-30 10:58:28,074 INFO] Validation time: 7.48
+[2021-11-30 10:58:28,074 INFO] Validation average loss: 3.516
+[2021-11-30 10:58:28,074 INFO] Validation perplexity: 33.664
+[2021-11-30 10:58:28,074 INFO] Validation accuracy: 52.159
+[2021-11-30 10:58:28,074 INFO] Stalled patience: 4 / 10
+[2021-11-30 10:58:42,076 INFO] step:  26978 /  32900, during_time: 174.76, avg_loss: 1.257, accuracy: 75.334, lr: 0.0000012
+[2021-11-30 10:58:42,077 INFO] Validating ...
+[2021-11-30 10:58:49,548 INFO] Validation example number: 6133
+[2021-11-30 10:58:49,548 INFO] Validation time: 7.47
+[2021-11-30 10:58:49,548 INFO] Validation average loss: 3.523
+[2021-11-30 10:58:49,548 INFO] Validation perplexity: 33.902
+[2021-11-30 10:58:49,548 INFO] Validation accuracy: 52.084
+[2021-11-30 10:58:49,548 INFO] Stalled patience: 5 / 10
+[2021-11-30 10:58:49,548 INFO] *** [ Epoch 42 / 50 ] ***
+[2021-11-30 10:59:13,965 INFO] step:  27078 /  32900, during_time: 24.42, avg_loss: 2.687, accuracy: 49.912, lr: 0.0000012
+[2021-11-30 10:59:38,294 INFO] step:  27178 /  32900, during_time: 48.75, avg_loss: 2.485, accuracy: 51.870, lr: 0.0000012
+[2021-11-30 11:00:02,622 INFO] step:  27278 /  32900, during_time: 73.07, avg_loss: 2.378, accuracy: 53.043, lr: 0.0000012
+[2021-11-30 11:00:02,623 INFO] Validating ...
+[2021-11-30 11:00:10,087 INFO] Validation example number: 6133
+[2021-11-30 11:00:10,087 INFO] Validation time: 7.46
+[2021-11-30 11:00:10,087 INFO] Validation average loss: 2.990
+[2021-11-30 11:00:10,087 INFO] Validation perplexity: 19.884
+[2021-11-30 11:00:10,087 INFO] Validation accuracy: 54.143
+[2021-11-30 11:00:10,087 INFO] Model is improving acc: 54.087 --> 54.143
+[2021-11-30 11:00:10,195 INFO] Saving checkpoint checkpoints/bart_step_27278.pt
+[2021-11-30 11:00:38,022 INFO] step:  27378 /  32900, during_time: 108.47, avg_loss: 1.877, accuracy: 62.979, lr: 0.0000012
+[2021-11-30 11:01:01,911 INFO] step:  27478 /  32900, during_time: 132.36, avg_loss: 1.563, accuracy: 69.254, lr: 0.0000012
+[2021-11-30 11:01:26,503 INFO] step:  27578 /  32900, during_time: 156.95, avg_loss: 1.349, accuracy: 73.486, lr: 0.0000012
+[2021-11-30 11:01:26,504 INFO] Validating ...
+[2021-11-30 11:01:33,978 INFO] Validation example number: 6133
+[2021-11-30 11:01:33,978 INFO] Validation time: 7.47
+[2021-11-30 11:01:33,978 INFO] Validation average loss: 3.515
+[2021-11-30 11:01:33,978 INFO] Validation perplexity: 33.632
+[2021-11-30 11:01:33,979 INFO] Validation accuracy: 52.107
+[2021-11-30 11:01:33,979 INFO] Stalled patience: 1 / 10
+[2021-11-30 11:01:48,035 INFO] step:  27636 /  32900, during_time: 178.49, avg_loss: 1.255, accuracy: 75.372, lr: 0.0000012
+[2021-11-30 11:01:48,036 INFO] Validating ...
+[2021-11-30 11:01:55,510 INFO] Validation example number: 6133
+[2021-11-30 11:01:55,510 INFO] Validation time: 7.47
+[2021-11-30 11:01:55,510 INFO] Validation average loss: 3.526
+[2021-11-30 11:01:55,511 INFO] Validation perplexity: 33.989
+[2021-11-30 11:01:55,511 INFO] Validation accuracy: 52.118
+[2021-11-30 11:01:55,511 INFO] Stalled patience: 2 / 10
+[2021-11-30 11:01:55,511 INFO] *** [ Epoch 43 / 50 ] ***
+[2021-11-30 11:02:20,054 INFO] step:  27736 /  32900, during_time: 24.54, avg_loss: 2.688, accuracy: 49.734, lr: 0.0000009
+[2021-11-30 11:02:44,430 INFO] step:  27836 /  32900, during_time: 48.92, avg_loss: 2.483, accuracy: 51.907, lr: 0.0000009
+[2021-11-30 11:03:08,732 INFO] step:  27936 /  32900, during_time: 73.22, avg_loss: 2.376, accuracy: 53.064, lr: 0.0000009
+[2021-11-30 11:03:08,732 INFO] Validating ...
+[2021-11-30 11:03:16,245 INFO] Validation example number: 6133
+[2021-11-30 11:03:16,245 INFO] Validation time: 7.51
+[2021-11-30 11:03:16,245 INFO] Validation average loss: 3.017
+[2021-11-30 11:03:16,245 INFO] Validation perplexity: 20.438
+[2021-11-30 11:03:16,245 INFO] Validation accuracy: 54.087
+[2021-11-30 11:03:16,245 INFO] Stalled patience: 3 / 10
+[2021-11-30 11:03:40,086 INFO] step:  28036 /  32900, during_time: 104.57, avg_loss: 1.873, accuracy: 63.050, lr: 0.0000009
+[2021-11-30 11:04:03,946 INFO] step:  28136 /  32900, during_time: 128.44, avg_loss: 1.560, accuracy: 69.305, lr: 0.0000009
+[2021-11-30 11:04:28,537 INFO] step:  28236 /  32900, during_time: 153.03, avg_loss: 1.347, accuracy: 73.524, lr: 0.0000009
+[2021-11-30 11:04:28,538 INFO] Validating ...
+[2021-11-30 11:04:36,038 INFO] Validation example number: 6133
+[2021-11-30 11:04:36,038 INFO] Validation time: 7.50
+[2021-11-30 11:04:36,038 INFO] Validation average loss: 3.509
+[2021-11-30 11:04:36,038 INFO] Validation perplexity: 33.408
+[2021-11-30 11:04:36,038 INFO] Validation accuracy: 52.197
+[2021-11-30 11:04:36,038 INFO] Stalled patience: 4 / 10
+[2021-11-30 11:04:50,035 INFO] step:  28294 /  32900, during_time: 174.52, avg_loss: 1.253, accuracy: 75.405, lr: 0.0000009
+[2021-11-30 11:04:50,035 INFO] Validating ...
+[2021-11-30 11:04:57,541 INFO] Validation example number: 6133
+[2021-11-30 11:04:57,542 INFO] Validation time: 7.51
+[2021-11-30 11:04:57,542 INFO] Validation average loss: 3.522
+[2021-11-30 11:04:57,542 INFO] Validation perplexity: 33.846
+[2021-11-30 11:04:57,542 INFO] Validation accuracy: 52.165
+[2021-11-30 11:04:57,542 INFO] Stalled patience: 5 / 10
+[2021-11-30 11:04:57,542 INFO] *** [ Epoch 44 / 50 ] ***
+[2021-11-30 11:05:22,026 INFO] step:  28394 /  32900, during_time: 24.48, avg_loss: 2.663, accuracy: 50.148, lr: 0.0000009
+[2021-11-30 11:05:46,416 INFO] step:  28494 /  32900, during_time: 48.87, avg_loss: 2.466, accuracy: 52.110, lr: 0.0000009
+[2021-11-30 11:06:10,665 INFO] step:  28594 /  32900, during_time: 73.12, avg_loss: 2.362, accuracy: 53.237, lr: 0.0000009
+[2021-11-30 11:06:10,665 INFO] Validating ...
+[2021-11-30 11:06:18,135 INFO] Validation example number: 6133
+[2021-11-30 11:06:18,135 INFO] Validation time: 7.47
+[2021-11-30 11:06:18,135 INFO] Validation average loss: 3.030
+[2021-11-30 11:06:18,135 INFO] Validation perplexity: 20.690
+[2021-11-30 11:06:18,135 INFO] Validation accuracy: 54.140
+[2021-11-30 11:06:18,135 INFO] Stalled patience: 6 / 10
+[2021-11-30 11:06:41,836 INFO] step:  28694 /  32900, during_time: 104.29, avg_loss: 1.863, accuracy: 63.156, lr: 0.0000009
+[2021-11-30 11:07:05,724 INFO] step:  28794 /  32900, during_time: 128.18, avg_loss: 1.553, accuracy: 69.374, lr: 0.0000009
+[2021-11-30 11:07:30,450 INFO] step:  28894 /  32900, during_time: 152.91, avg_loss: 1.341, accuracy: 73.593, lr: 0.0000009
+[2021-11-30 11:07:30,450 INFO] Validating ...
+[2021-11-30 11:07:37,939 INFO] Validation example number: 6133
+[2021-11-30 11:07:37,940 INFO] Validation time: 7.49
+[2021-11-30 11:07:37,940 INFO] Validation average loss: 3.512
+[2021-11-30 11:07:37,940 INFO] Validation perplexity: 33.500
+[2021-11-30 11:07:37,940 INFO] Validation accuracy: 52.217
+[2021-11-30 11:07:37,940 INFO] Stalled patience: 7 / 10
+[2021-11-30 11:07:52,167 INFO] step:  28952 /  32900, during_time: 174.63, avg_loss: 1.247, accuracy: 75.472, lr: 0.0000009
+[2021-11-30 11:07:52,168 INFO] Validating ...
+[2021-11-30 11:07:59,682 INFO] Validation example number: 6133
+[2021-11-30 11:07:59,683 INFO] Validation time: 7.51
+[2021-11-30 11:07:59,683 INFO] Validation average loss: 3.522
+[2021-11-30 11:07:59,683 INFO] Validation perplexity: 33.868
+[2021-11-30 11:07:59,683 INFO] Validation accuracy: 52.148
+[2021-11-30 11:07:59,683 INFO] Stalled patience: 8 / 10
+[2021-11-30 11:07:59,683 INFO] *** [ Epoch 45 / 50 ] ***
+[2021-11-30 11:08:24,197 INFO] step:  29052 /  32900, during_time: 24.51, avg_loss: 2.658, accuracy: 50.139, lr: 0.0000007
+[2021-11-30 11:08:48,659 INFO] step:  29152 /  32900, during_time: 48.98, avg_loss: 2.473, accuracy: 52.110, lr: 0.0000007
+[2021-11-30 11:09:13,027 INFO] step:  29252 /  32900, during_time: 73.34, avg_loss: 2.370, accuracy: 53.189, lr: 0.0000007
+[2021-11-30 11:09:13,027 INFO] Validating ...
+[2021-11-30 11:09:20,518 INFO] Validation example number: 6133
+[2021-11-30 11:09:20,519 INFO] Validation time: 7.49
+[2021-11-30 11:09:20,519 INFO] Validation average loss: 3.066
+[2021-11-30 11:09:20,519 INFO] Validation perplexity: 21.452
+[2021-11-30 11:09:20,519 INFO] Validation accuracy: 54.056
+[2021-11-30 11:09:20,519 INFO] Stalled patience: 9 / 10
+[2021-11-30 11:09:44,335 INFO] step:  29352 /  32900, during_time: 104.65, avg_loss: 1.870, accuracy: 63.084, lr: 0.0000007
+[2021-11-30 11:10:08,248 INFO] step:  29452 /  32900, during_time: 128.56, avg_loss: 1.558, accuracy: 69.317, lr: 0.0000007
+[2021-11-30 11:10:32,982 INFO] step:  29552 /  32900, during_time: 153.30, avg_loss: 1.345, accuracy: 73.546, lr: 0.0000007
+[2021-11-30 11:10:32,983 INFO] Validating ...
+[2021-11-30 11:10:40,469 INFO] Validation example number: 6133
+[2021-11-30 11:10:40,469 INFO] Validation time: 7.49
+[2021-11-30 11:10:40,469 INFO] Validation average loss: 3.499
+[2021-11-30 11:10:40,469 INFO] Validation perplexity: 33.086
+[2021-11-30 11:10:40,469 INFO] Validation accuracy: 52.301
+[2021-11-30 11:10:40,469 INFO] Stalled patience: 10 / 10
+[2021-11-30 11:10:40,469 INFO] Training finished after stalled validations. Early Stop!
+[2021-11-30 11:10:40,469 INFO] The best accuarcy of validation step: 27278, accuarcy: 54.143
+[2021-11-30 11:10:40,469 INFO] The best perplexity of validation step: 5564, perplexity: 16.005

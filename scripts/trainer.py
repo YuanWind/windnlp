@@ -6,7 +6,6 @@
 @Desc    :   None
 '''
 import collections
-from scripts.evaluater import Evaluater
 from transformers.trainer import *
 from modules.nn.adversarial import AWP, EMA, FGM, PGD
 import logging
@@ -14,9 +13,10 @@ import logging
 logger = logging.getLogger(__name__.replace('_', ''))
 
 class MyTrainer(Trainer):
-    def __init__(self,config, **kwargs):
+    def __init__(self,config, evaluater=None, **kwargs):
         super().__init__(args=config.trainer_args, **kwargs)
         self.config = config
+        self.evaluater = evaluater
         self.current_step = 0
         # TODO early_stop 换成Trainer自带的更好
         self.early_stop_mode = self.config.early_stop_mode # -1代表关闭，0代表连续评测四次没提升就停止，>0的数字代表具体的哪一轮停止
@@ -162,7 +162,6 @@ class MyTrainer(Trainer):
         return loss.detach()
 
 
-    
     def evaluation_loop(
         self,
         dataloader: DataLoader,
@@ -299,7 +298,7 @@ class MyTrainer(Trainer):
                     inputs_decode = nested_numpify(inputs_host)
                 if labels_host is not None:
                     labels = nested_numpify(labels_host)
-                Evaluater.steps_evaluate(logits, inputs_decode, labels)
+                self.evaluater.steps_evaluate(logits, inputs_decode, labels)
                 # Set back to None to begin a new accumulation
                 losses_host, preds_host, inputs_host, labels_host = None, None, None, None
 
@@ -318,7 +317,7 @@ class MyTrainer(Trainer):
         if labels_host is not None:
             labels = nested_numpify(labels_host)
 
-        Evaluater.steps_evaluate(preds_host=logits, inputs_host=inputs_decode, labels_host=labels)        
+        self.evaluater.steps_evaluate(preds_host=logits, inputs_host=inputs_decode, labels_host=labels)        
         # Number of samples
         if has_length(eval_dataset):
             num_samples = len(eval_dataset)
@@ -366,6 +365,7 @@ class MyTrainer(Trainer):
             if best_key in metrics: 
                 if (metrics[best_key] > self.state.best_metric and self.args.greater_is_better) or \
                    (metrics[best_key] < self.state.best_metric and not self.args.greater_is_better): 
+                    logger.info(f'{best_key} improved from {self.state.best_metric} to {metrics[best_key]}.')
                     self.save()
                     self.early_stop_counter = 0
                 else:
@@ -581,7 +581,7 @@ class MyTrainer(Trainer):
                     inputs_decode = nested_numpify(inputs_host)
                 if labels_host is not None:
                     labels = nested_numpify(labels_host)
-                Evaluater.steps_evaluate(logits, inputs_decode, labels)
+                self.evaluater.steps_evaluate(logits, inputs_decode, labels)
                 # Set back to None to begin a new accumulation
                 losses_host, preds_host, inputs_host, labels_host = None, None, None, None
 
@@ -600,7 +600,7 @@ class MyTrainer(Trainer):
         if labels_host is not None:
             labels = nested_numpify(labels_host)
 
-        Evaluater.steps_evaluate(preds_host=logits, inputs_host=inputs_decode, labels_host=labels)        
+        self.evaluater.steps_evaluate(preds_host=logits, inputs_host=inputs_decode, labels_host=labels)        
         # Number of samples
         if has_length(eval_dataset):
             num_samples = len(eval_dataset)

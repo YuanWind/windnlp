@@ -35,7 +35,7 @@ def sort_dict(d, mode='k', reverse=False):
         return d
 
 def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
-    """检查GPU的空闲状态，设定判断阈值
+    """检查GPU的空闲状态，设定判断阈值，默认为5G。先找没人使用的GPU，如果全部GPU都有人用，则随机等待1~5分钟后找小于阈值的可用的GPU。
     Args:
         find_ours (float, optional): _description_. Defaults to 11.5.
         100*1000000 = 100 M
@@ -50,16 +50,12 @@ def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
         find_times = 0
         pynvml.nvmlInit()
         cnt = pynvml.nvmlDeviceGetCount()
-        logger.warning(f'Start to find the GPU device of using memory<{threshold_mem/1000000}M ...')
         while True:
-            
+            time.sleep(5) 
             for i in range(cnt):
                 handle = pynvml.nvmlDeviceGetHandleByIndex(i)
                 info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-                if info.used < 100*1000000:  # 100M    
-                    logger.warning(f'GPU-{i} used {info.used/1000000} M, so the program will use GPU-{i}.') 
-                    return i
-                if info.used < threshold_mem:  # 5G    
+                if info.used < 10*1000000:  # 10M    # 小于10M表示没人用
                     logger.warning(f'GPU-{i} used {info.used/1000000} M, so the program will use GPU-{i}.') 
                     return i
             cur_time = time.time()
@@ -75,7 +71,12 @@ def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
             random_time = random.randint(1,5)
             logger.warning(f'当前无可用的GPU，{random_time}分钟后开始下一次寻找可用的GPU。')
             time.sleep(random_time*60)
-            
+            for i in range(cnt):
+                handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+                info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                if info.used < threshold_mem:  # 5G  # 小于5G表示虽然有人用，但是用的不多，我也能用
+                    logger.warning(f'GPU-{i} used {info.used/1000000} M, so the program will use GPU-{i}.') 
+                    return i
     except:
         return 0
         
