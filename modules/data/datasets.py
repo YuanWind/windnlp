@@ -404,8 +404,6 @@ class NERDataset(BaseDataset):
 
 
 
-    
-
 
 class MyLineByLineTextDataset(Dataset):
     """

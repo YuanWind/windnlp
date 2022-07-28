@@ -24,7 +24,7 @@ def build_model(kwargs=None):
             for k, v in kwargs.items():
                 config.set(k,v)
                 
-    model = RRGModel(config)
+    model = RRGModel(config, Evaluater)
     
     # model.load_state_dict(torch.load('projects/RRG/outs/ori_bart1/checkpoint-30800/pytorch_model.bin'))
     return model

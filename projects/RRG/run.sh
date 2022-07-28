@@ -19,7 +19,7 @@ nohup python projects/RRG/main.py --config_file projects/RRG/main.cfg --postfix 
 		> projects/RRG/log_ori_bart.txt 2>&1 &
 
 nohup python projects/RRG/main.py --config_file projects/RRG/main.cfg --postfix 'ada_bart' --model_type 'ada_bart' \
-		--learning_rate 2e-4 \
+		--learning_rate 1e-4 \
 		> projects/RRG/log_ada_bart.txt 2>&1 &
 
 nohup python projects/RRG/main.py --config_file projects/RRG/main.cfg --postfix 'ori_bart1' --model_type 'ori_bart' \

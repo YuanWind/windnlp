@@ -44,7 +44,7 @@ class AdaEvaluater:
         # Metrics
         return_res = eval_generate(eval_res, cls.config)
         return_res['acc'] = (cls.total_correct/cls.total_num_words).item()
-        return_res['ppl'] = torch.exp(cls.total_loss/cls.total_num_words).item()
+        return_res['ppl'] = torch.exp(min(cls.total_loss/cls.total_num_words, 30)).item()
         return_res['avg_loss'] = (cls.total_loss/cls.total_num_words).item()
         logger.info(json.dumps(return_res,indent=4))
         
@@ -67,7 +67,10 @@ class AdaEvaluater:
         
         res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True)
         for idx, inst in enumerate(insts):
-            inst['pred'] = res[idx]
+            if cls.config.language == 'zh':
+                inst['pred'] = res[idx].replace(' ', '')
+            else:
+                inst['pred'] = res[idx]
         cls.res.extend(insts)
     
 def eval_generate(insts, config):

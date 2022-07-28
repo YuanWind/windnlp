@@ -15,7 +15,6 @@ import torch.nn.functional as F
 import torch
 import logging
 from modules.nn.base_model import BaseModel
-from projects.RRG.ada_evaluater import AdaEvaluater as Evaluater
 
 logger = logging.getLogger(__name__.replace('_', ''))
 
@@ -25,9 +24,9 @@ MODEL_MAPPING = {
     'ada_bart':(BartConfig,AdaLabel_BartForConditionalGeneration)
 }
 class RRGModel(BaseModel):
-    def __init__(self, config):
+    def __init__(self, config, evaluater):
         super().__init__(config)
-        
+        self.evaluater = evaluater
         if config.model_type == 'ori_ada':
             self.adalabel_config = AdaLabelConfig(vocab_size = config.vocab_size, dropout = config.dropout, attention_dropout=config.attn_dropout, 
                                                   pad_token_id=config.pad_token_id, bos_token_id=config.bos_token_id,
@@ -146,9 +145,9 @@ class RRGModel(BaseModel):
             batch_state.append(v)
         
         if not self.training:
-            Evaluater.total_loss+=loss
-            Evaluater.total_num_words+=num
-            Evaluater.total_correct+=correct
+            self.evaluater.total_loss+=loss
+            self.evaluater.total_num_words+=num
+            self.evaluater.total_correct+=correct
             
         self.cur_batch_state = state
         return num
