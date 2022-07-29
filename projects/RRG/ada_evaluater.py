@@ -15,6 +15,8 @@ from transformers import BertTokenizer
 from scripts.utils import dump_json
 logger = logging.getLogger(__name__.replace('_', ''))
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
+from nltk.translate.meteor_score import meteor_score
+from rouge import Rouge
 
 def compute_objective(metrics):
     # 设置 optuna 超参搜索的优化目标
@@ -74,48 +76,83 @@ class AdaEvaluater:
         cls.res.extend(insts)
     
 def eval_generate(insts, config):
+    
     res_dict = {}
     golden, infer = [], []
-    pred_ids, tgt_ids = [], []
-    tokenizer = BertTokenizer.from_pretrained('bert-base-chinese' if config.language=='zh' else 'bert-base-uncased')
-    for inst in insts:
-        one_tgt_ids = tokenizer(inst['tgt'], add_special_tokens = True,
-                                      padding = 'max_length', max_length = config.max_seq_len, 
-                                      )
-        one_pred_ids =  tokenizer(inst['pred'], add_special_tokens = True,
-                                      padding = 'max_length', max_length = config.max_seq_len, 
-                                      )
-        pred_ids.append(one_pred_ids.input_ids)
-        tgt_ids.append(one_tgt_ids.input_ids)
+    if config.language == 'zh':
+        import jieba
+        rouge = Rouge()
         
-        g = tokenizer.decode(one_tgt_ids.input_ids, skip_special_tokens=True,
-                                           clean_up_tokenization_spaces=False).split(None)
-        golden.append([g])
-        p = tokenizer.decode(one_pred_ids.input_ids, skip_special_tokens=True,
-                                           clean_up_tokenization_spaces=False).split(None)
-        infer.append(p)
+        for inst in insts:
+            golden.append(' '.join(jieba.cut(inst['tgt'])))
+            infer.append(' '.join(jieba.cut(inst['pred'])))
+            
+        # clothing 数据集还要计算Rouge1、Rouge2、RougeL和METEOR
+        r_s = rouge.get_scores(infer, golden, avg=True)
+        res_dict[f"Rouge-1"] = r_s['rouge-1']['r'] * 100
+        res_dict[f"Rouge-2"] = r_s['rouge-2']['r'] * 100
+        res_dict[f"Rouge-L"] = r_s['rouge-l']['f'] * 100
+        # m_s = meteor_score([[i] for i in golden], infer)
+        # res_dict[f"Meteor"] = m_s
+        
+        
+        golden = [[i.split(' ')] for i in golden]
+        infer = [i.split(' ') for i in infer]
+        # Avg_BLEU-1-4
+        chencherry = SmoothingFunction()
+        bleu_score = []
+        for i in range(4):
+            weights = [1 / (i + 1)] * (i + 1)
+            b_s = round(100 * corpus_bleu(
+                                        golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
+            bleu_score.append(b_s)
+        res_dict[f"avg_BLEU_1-4"] = sum(bleu_score)/len(bleu_score)
+        
+        # eval dist
+        # clothing数据只考虑前200条计算dist
+        for idx, x in enumerate(calc_diversity(infer[:200])):
+            distinct = round(x * 100, 2)
+            res_dict[f"dist-{idx+1}"] = distinct
+        
+        for idx, x in enumerate(calc_diversity([x[0] for x in golden[:200]])):
+            gold_distinct = round(x * 100, 2)
+            res_dict[f"ref_dist-{idx+1}"] = gold_distinct
+        
+    else:   
+        tokenizer = BertTokenizer.from_pretrained('bert-base-chinese' if config.language=='zh' else 'bert-base-uncased')
+        for inst in insts:
+            one_tgt_ids = tokenizer(inst['tgt'], add_special_tokens = True,
+                                        padding = 'max_length', max_length = config.max_seq_len, 
+                                        )
+            one_pred_ids =  tokenizer(inst['pred'], add_special_tokens = True,
+                                        padding = 'max_length', max_length = config.max_seq_len, 
+                                        )
+            g = tokenizer.decode(one_tgt_ids.input_ids, skip_special_tokens=True,
+                                            clean_up_tokenization_spaces=False).split(None)
+            golden.append([g])
+            p = tokenizer.decode(one_pred_ids.input_ids, skip_special_tokens=True,
+                                            clean_up_tokenization_spaces=False).split(None)
+            infer.append(p)
 
-    # eval bleu
-    chencherry = SmoothingFunction()
-    for i in range(4):
-        weights = [1 / (i + 1)] * (i + 1)
-        res_dict[f"BLEU-{i+1}"] = round(100 * corpus_bleu(
-                golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
-    
-    # eval dist
-    for idx, x in enumerate(calc_diversity(infer)):
-        distinct = round(x * 100, 2)
-        res_dict[f"dist-{idx+1}"] = distinct
-    
-    for idx, x in enumerate(calc_diversity([x[0] for x in golden])):
-        gold_distinct = round(x * 100, 2)
-        res_dict[f"ref_dist-{idx+1}"] = gold_distinct
-    
-
-    # eval ent
-    ent = calc_entropy(infer)
-    for idx, x in enumerate(ent):
-        res_dict[f"ent-{idx+1}"] = round(x, 2)
+        # eval dist
+        for idx, x in enumerate(calc_diversity(infer)):
+            distinct = round(x * 100, 2)
+            res_dict[f"dist-{idx+1}"] = distinct
+        
+        for idx, x in enumerate(calc_diversity([x[0] for x in golden])):
+            gold_distinct = round(x * 100, 2)
+            res_dict[f"ref_dist-{idx+1}"] = gold_distinct
+        
+        # eval bleu
+        chencherry = SmoothingFunction()
+        for i in range(4):
+            weights = [1 / (i + 1)] * (i + 1)
+            res_dict[f"BLEU-{i+1}"] = round(100 * corpus_bleu(
+                    golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
+        # eval ent
+        ent = calc_entropy(infer)
+        for idx, x in enumerate(ent):
+            res_dict[f"ent-{idx+1}"] = round(x, 2)
     
     return res_dict
 

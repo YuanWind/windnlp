@@ -58,8 +58,11 @@ def build_data(config, test_insts = None, train_insts=None, dev_insts=None):
     
     if config.add_dev_data_to_train:
         vocab.train_insts = vocab.train_insts + vocab.dev_insts
-        
-    tokenizer = AutoTokenizer.from_pretrained(config.pretrained_model_name_or_path)
+    
+    if config.language == 'zh':
+        tokenizer = BertTokenizer.from_pretrained(config.pretrained_model_name_or_path)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(config.pretrained_model_name_or_path)
     config.set('vocab_size', tokenizer.vocab_size)
     config.set('pad_token_id', tokenizer.pad_token_id)
     config.set('bos_token_id', tokenizer.bos_token_id if tokenizer.bos_token_id is not None else tokenizer.cls_token_id)
