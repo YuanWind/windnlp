@@ -1,5 +1,5 @@
 import collections
-from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
+from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction,sentence_bleu
 import numpy as np
 from rouge import Rouge
 from nltk.translate.meteor_score import meteor_score
@@ -21,9 +21,11 @@ def eval_generate(insts,tokenizer,language='en'):
         for inst in insts:
             golden.append(' '.join(jieba.cut(inst['tgt'])))
             infer.append(' '.join(jieba.cut(inst['pred'])))
-            
+        
+        # print(r_s1)
         # clothing 数据集还要计算Rouge1、Rouge2、RougeL和METEOR
         r_s = rouge.get_scores(infer, golden, avg=True)
+        # print(r_s)
         res_dict[f"Rouge-1"] = r_s['rouge-1']['r'] * 100
         res_dict[f"Rouge-2"] = r_s['rouge-2']['r'] * 100
         res_dict[f"Rouge-L"] = r_s['rouge-l']['f'] * 100
@@ -38,17 +40,22 @@ def eval_generate(insts,tokenizer,language='en'):
         for idx in range(len(infer)):
             m_s = meteor_score(golden[idx], infer[idx])
             ms_list.append(m_s)
-        res_dict[f"Meteor"] = sum(ms_list)/len(ms_list)
+        res_dict[f"Meteor"] = (sum(ms_list)/len(ms_list))*100
         
-        # Avg_BLEU-1-4
+        # TODO 计算宏平均 BLEU-1-4
         chencherry = SmoothingFunction()
-        bleu_score = []
-        for i in range(4):
-            weights = [1 / (i + 1)] * (i + 1)
-            b_s = round(100 * corpus_bleu(
-                                        golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
-            bleu_score.append(b_s)
-        res_dict[f"avg_BLEU_1-4"] = sum(bleu_score)/len(bleu_score)
+        macro_bleu_scores = []
+        for idx in range(len(infer)):
+            b_s = round(100 * sentence_bleu(golden[idx], infer[idx],smoothing_function=chencherry.method1), 2)
+            macro_bleu_scores.append(b_s)
+
+        res_dict[f"Macro_BLEU"] = sum(macro_bleu_scores)/len(macro_bleu_scores)
+        # for i in range(4):
+        #     weights = [1 / (i + 1)] * (i + 1)
+        #     b_s = round(100 * corpus_bleu(
+        #                                 golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
+        #     bleu_score.append(b_s)
+        # res_dict[f"avg_BLEU_1-4"] = sum(bleu_score)/len(bleu_score)
         
         # eval dist
         # clothing数据只考虑前200条计算dist
@@ -88,7 +95,7 @@ def eval_generate(insts,tokenizer,language='en'):
         num = tgt_ids.ne(0).sum()
         acc = correct/num
         print(f'acc: {acc}')
-        # eval bleu
+        # eval micro bleu
         chencherry = SmoothingFunction()
         for i in range(4):
             weights = [1 / (i + 1)] * (i + 1)
@@ -198,5 +205,5 @@ if __name__=='__main__':
     # split('projects/RRG/outs/daily_100/temp_dir/test_pred_bak.json', 'projects/RRG/outs/daily_100/temp_dir')
     # test()
     
-    insts = load_json('projects/RRG/outs/ori_ada_zh/temp_dir/dev_pred.json')
+    insts = load_json('projects/outs/ori_ada_zh/temp_dir/test_pred.json')
     print(eval_generate(insts, tokenizer, 'zh'))

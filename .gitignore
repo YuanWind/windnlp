@@ -2,4 +2,6 @@
 projects/*
 projects/RRG/data*
 projects/RRG/outs
+projects/RRG/logs
+eval/*
 !projects/RRG
