@@ -1,4 +1,5 @@
 import collections
+from nbformat import convert
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction,sentence_bleu
 import numpy as np
 from rouge import Rouge
@@ -8,8 +9,10 @@ from transformers import BertTokenizer, BartTokenizer
 from scripts.utils import load_json
 import torch
 
-
-def eval_generate(insts,tokenizer,language='en'):
+word2id = {'UNK':"0"}
+max_id_len = 1
+def eval_generate(insts,tokenizer,language='en',is_cut=False, convert2id=False):
+    global max_id_len
     res_dict = {}
     golden, infer = [], []
     pred_ids, tgt_ids = [], []
@@ -19,8 +22,35 @@ def eval_generate(insts,tokenizer,language='en'):
         rouge = Rouge()
         
         for inst in insts:
-            golden.append(' '.join(jieba.cut(inst['tgt'])))
-            infer.append(' '.join(jieba.cut(inst['pred'])))
+            
+            if not is_cut:
+                gold_words = jieba.cut(inst['tgt'])
+                infer_words = jieba.cut(inst['pred'])
+            else:
+                gold_words = inst['tgt'].split(' ')
+                infer_words = inst['pred'].split(' ')
+                
+            if convert2id:
+                gold_words_ids = []
+                for w in gold_words:
+                    if w not in word2id:
+                        word2id[w] = str(max_id_len)
+                        max_id_len += 1
+                        
+                    gold_words_ids.append(word2id[w])
+                infer_words_ids = []
+                
+                for w in infer_words:
+                    if w not in word2id:
+                        word2id[w] = str(max_id_len)
+                        max_id_len += 1
+                    infer_words_ids.append(word2id.get(w, 'UNK'))
+                    
+                gold_words = gold_words_ids
+                infer_words = infer_words_ids
+                   
+            golden.append(' '.join(gold_words))
+            infer.append(' '.join(infer_words))
         
         # print(r_s1)
         # clothing 数据集还要计算Rouge1、Rouge2、RougeL和METEOR
@@ -204,6 +234,13 @@ if __name__=='__main__':
     # print(eval_generate(insts, tokenizer))
     # split('projects/RRG/outs/daily_100/temp_dir/test_pred_bak.json', 'projects/RRG/outs/daily_100/temp_dir')
     # test()
-    
-    insts = load_json('projects/outs/ori_ada_zh/temp_dir/test_pred.json')
-    print(eval_generate(insts, tokenizer, 'zh'))
+    path = 'D:/desktop/RRG_data/Review-Response-Generation/code-py2/res_copynet.json'
+    lang = 'zh'
+    is_cut = True
+    convert2id = False
+    insts = load_json(path)
+    res = eval_generate(insts, tokenizer, language=lang, is_cut = is_cut, convert2id = convert2id)
+    res_str = f'{path} with lang={lang}, is_cut={is_cut}, convert2id={convert2id}:\n{res} \n\n'
+    print(res_str)
+    with open('eval_res.txt', 'a+', encoding='utf-8') as f:
+        f.write(res_str)

@@ -1,7 +1,6 @@
 **/__pycache__
-projects/*
-projects/RRG/data*
-projects/RRG/outs
-projects/RRG/logs
+projects/data*
+projects/outs
+projects/logs
 eval/*
-!projects/RRG
+
