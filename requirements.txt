@@ -1,0 +1,7 @@
+torch==1.9
+transformers==4.18.0
+jieba
+nltk
+rouge
+tensorboard
+setuptools==59.5.0

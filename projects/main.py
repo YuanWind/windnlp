@@ -1,4 +1,3 @@
-from lib2to3.pgen2 import token
 import sys
 sys.path.extend(['../../','./','../'])
 from scripts.main import run_init # 寻找可用的GPU

@@ -14,7 +14,7 @@ import torch
 from transformers import BertTokenizer
 from scripts.utils import dump_json
 logger = logging.getLogger(__name__.replace('_', ''))
-from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
+from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction, sentence_bleu
 from nltk.translate.meteor_score import meteor_score
 from rouge import Rouge
 
@@ -77,9 +77,13 @@ class AdaEvaluater:
             # 把triples放到最后。方便对比tgt和pred
             inst['triples'] = triples 
         cls.res.extend(insts)
+        
+        
+word2id = {'UNK':"0"}
+max_id_len = 1    
+def eval_generate(insts, config,is_cut=False, convert2id=False):
     
-def eval_generate(insts, config):
-    
+    global max_id_len
     res_dict = {}
     golden, infer = [], []
     if config.language == 'zh':
@@ -87,29 +91,70 @@ def eval_generate(insts, config):
         rouge = Rouge()
         
         for inst in insts:
-            golden.append(' '.join(jieba.cut(inst['tgt'])))
-            infer.append(' '.join(jieba.cut(inst['pred'])))
             
+            if not is_cut:
+                gold_words = jieba.cut(inst['tgt'])
+                infer_words = jieba.cut(inst['pred'])
+            else:
+                gold_words = inst['tgt'].split(' ')
+                infer_words = inst['pred'].split(' ')
+                
+            if convert2id:
+                gold_words_ids = []
+                for w in gold_words:
+                    if w not in word2id:
+                        word2id[w] = str(max_id_len)
+                        max_id_len += 1
+                        
+                    gold_words_ids.append(word2id[w])
+                infer_words_ids = []
+                
+                for w in infer_words:
+                    if w not in word2id:
+                        word2id[w] = str(max_id_len)
+                        max_id_len += 1
+                    infer_words_ids.append(word2id.get(w, 'UNK'))
+                    
+                gold_words = gold_words_ids
+                infer_words = infer_words_ids
+                   
+            golden.append(' '.join(gold_words))
+            infer.append(' '.join(infer_words))
+        
+        # print(r_s1)
         # clothing 数据集还要计算Rouge1、Rouge2、RougeL和METEOR
-        r_s = rouge.get_scores(infer, golden, avg=True, ignore_empty=True)
+        r_s = rouge.get_scores(infer, golden, avg=True)
+        # print(r_s)
         res_dict[f"Rouge-1"] = r_s['rouge-1']['r'] * 100
         res_dict[f"Rouge-2"] = r_s['rouge-2']['r'] * 100
         res_dict[f"Rouge-L"] = r_s['rouge-l']['f'] * 100
-        # m_s = meteor_score([[i] for i in golden], infer)
-        # res_dict[f"Meteor"] = m_s
+        
         
         
         golden = [[i.split(' ')] for i in golden]
         infer = [i.split(' ') for i in infer]
-        # Avg_BLEU-1-4
+        
+        # Meteor
+        ms_list = []
+        for idx in range(len(infer)):
+            m_s = meteor_score(golden[idx], infer[idx])
+            ms_list.append(m_s)
+        res_dict[f"Meteor"] = (sum(ms_list)/len(ms_list))*100
+        
+        # TODO 计算宏平均 BLEU-1-4
         chencherry = SmoothingFunction()
-        bleu_score = []
-        for i in range(4):
-            weights = [1 / (i + 1)] * (i + 1)
-            b_s = round(100 * corpus_bleu(
-                                        golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
-            bleu_score.append(b_s)
-        res_dict[f"avg_BLEU_1-4"] = sum(bleu_score)/len(bleu_score)
+        macro_bleu_scores = []
+        for idx in range(len(infer)):
+            b_s = round(100 * sentence_bleu(golden[idx], infer[idx],smoothing_function=chencherry.method1), 2)
+            macro_bleu_scores.append(b_s)
+
+        res_dict[f"Macro_BLEU"] = sum(macro_bleu_scores)/len(macro_bleu_scores)
+        # for i in range(4):
+        #     weights = [1 / (i + 1)] * (i + 1)
+        #     b_s = round(100 * corpus_bleu(
+        #                                 golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
+        #     bleu_score.append(b_s)
+        # res_dict[f"avg_BLEU_1-4"] = sum(bleu_score)/len(bleu_score)
         
         # eval dist
         # clothing数据只考虑前200条计算dist
@@ -120,8 +165,8 @@ def eval_generate(insts, config):
         for idx, x in enumerate(calc_diversity([x[0] for x in golden[:200]])):
             gold_distinct = round(x * 100, 2)
             res_dict[f"ref_dist-{idx+1}"] = gold_distinct
-        
-    else:   
+            
+    else: 
         tokenizer = BertTokenizer.from_pretrained('bert-base-chinese' if config.language=='zh' else 'bert-base-uncased')
         for inst in insts:
             one_tgt_ids = tokenizer(inst['tgt'], add_special_tokens = True,

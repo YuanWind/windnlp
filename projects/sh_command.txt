@@ -28,15 +28,16 @@ nohup python projects/main.py --config_file projects/main.cfg --postfix 'ada_con
 
 
 # chinese
-nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'ada_base' --model_type 'ori_ada'\
-		> projects/logs/log_ada_base.txt 2>&1 &
+nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'ada_bs_16' --model_type 'ori_ada'\
+		> projects/logs/log_ada_bs_16.txt 2>&1 &
 
-nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_base' --model_type 'ori_bart'\
-		> projects/logs/log_bart_base.txt 2>&1 &
+nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_lr_3_4' --model_type 'ori_bart'\
+		--learning_rate 2e-3 \
+		> projects/logs/log_bart_lr_3_4.txt 2>&1 &
 		
-nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'ada_bart_zh' --model_type 'ada_bart'\
-		--learning_rate 2e-4 \
-		> projects/log_ada_bart_zh.txt 2>&1 &
+nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'ada_bart_lr_3_4' --model_type 'ada_bart'\
+		--learning_rate 2e-3 \
+		> projects/logs/log_ada_bart_lr_3_4.txt 2>&1 &
 
 # eval
 python projects/main.py --do_train false --config_file projects/main.cfg \

@@ -40,6 +40,7 @@ def convert_data(data_dir, ori_dir):
                 idx += 1
         dump_json(types[data_type], f'{data_dir}/{data_type}.json')
         print(f'{data_type} has {len(data2)}, and converted {len(types[data_type])}.')
+        
 
 def convert_data_daily(data_dir):
     types = {'test':[], 'dev':[],'train':[]}
@@ -59,24 +60,72 @@ def build_vocab(train_files, dev_files, test_files, vocab_file, aspect2tokens):
     vocab.read_files(dev_files, 'dev')
     vocab.read_files(test_files, 'test')
     vocab.build(aspect2tokens)
+    print(f'Train num:{len(vocab.train_insts)}, dev num:{len(vocab.dev_insts)}, test num:{len(vocab.test_insts)}')
     dump_pkl(vocab, vocab_file)
     
+def align(src_path, tgt_path, json_path):
+    # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。
+    fixed_num = 0 
+    src = open(src_path,'r', encoding='utf-8').readlines()
+    tgt = open(tgt_path,'r', encoding='utf-8').readlines()
+    res = load_json(json_path)
+    idx0, idx1 = 0,0
+    for s,t in zip(src,tgt):
+        s = s.strip().replace(' ', '')
+        t = t.strip().replace(' ', '')
+        if idx1<len(res) and res[idx1]['src'] == s: 
+            if res[idx1]['tgt'] != t:# 如果src相等但tgt不相等，则令后者等于前者，并置triples为空
+                res[idx1]['tgt'] = t
+                res[idx1]['triples'] = []
+                fixed_num += 1
+            idx1 += 1
+            continue
+        one = {'src':s,'tgt':t, 'triples':[]}
+        res.insert(idx1, one)
+        idx1 += 1
+        fixed_num += 1
+    assert len(res)==len(src)
+    idx1 = 0
+    for s,t in zip(src,tgt):
+        s = s.strip().replace(' ', '')
+        t = t.strip().replace(' ', '')
+        if res[idx1]['src'] != s or res[idx1]['tgt'] != t:
+            print(f'{idx1} error.\n{res[idx1]["src"]}\n{s}\n{res[idx1]["tgt"]}\n{t}')
+        idx1 += 1
+    print(f'{json_path} fixed num: {fixed_num}.')
+    dump_json(res,json_path)    
+
+def align_main():
+    root_path = 'projects/data'
+    src_path, tgt_path, json_path = f'{root_path}/ori/valid_source.txt',\
+                                    f'{root_path}/ori/valid_target.txt',\
+                                    f'{root_path}/processed/dev.json'
+    align(src_path, tgt_path, json_path)
     
-
-
+    src_path, tgt_path, json_path = f'{root_path}/ori/test_source.txt',\
+                                    f'{root_path}/ori/test_target.txt',\
+                                    f'{root_path}/processed/test.json'
+    align(src_path, tgt_path, json_path)
+    
+    src_path, tgt_path, json_path = f'{root_path}/ori/train_source.txt',\
+                                    f'{root_path}/ori/train_target.txt',\
+                                    f'{root_path}/processed/train.json'
+    align(src_path, tgt_path, json_path)
+    
 if __name__ == '__main__':
-    # convert_data('projects/RRG/data/processed', 'projects/RRG/data/ori')
-    # train_files = ['projects/RRG/data/processed/train.json']
-    # dev_files = ['projects/RRG/data/processed/dev.json']
-    # test_files = ['projects/RRG/data/processed/test.json']
-    # vocab_file = 'projects/RRG/data/processed/vocab.pkl'
-    # aspect2tokens = json.loads(open('projects/RRG/data/processed/aspect2tokens.json', 'r', encoding='utf-8').read())
-    # build_vocab(train_files, dev_files, test_files, vocab_file, aspect2tokens)
-    
-    convert_data_daily('projects/RRG/data_daily')
-    train_files = ['projects/RRG/data_daily/processed/train.json']
-    dev_files = ['projects/RRG/data_daily/processed/dev.json']
-    test_files = ['projects/RRG/data_daily/processed/test.json']
-    vocab_file = 'projects/RRG/data_daily/processed/vocab.pkl'
-    aspect2tokens = json.loads(open('projects/RRG/data/processed/aspect2tokens.json', 'r', encoding='utf-8').read())
+    convert_data('projects/data/processed', 'projects/data/ori')
+    align_main()  # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。
+    train_files = ['projects/data/processed/train.json']
+    dev_files = ['projects/data/processed/dev.json']
+    test_files = ['projects/data/processed/test.json']
+    vocab_file = 'projects/data/processed/vocab.pkl'
+    aspect2tokens = json.loads(open('projects/data/processed/aspect2tokens.json', 'r', encoding='utf-8').read())
     build_vocab(train_files, dev_files, test_files, vocab_file, aspect2tokens)
+    
+    # convert_data_daily('projects/data_daily')
+    # train_files = ['projects/data_daily/processed/train.json']
+    # dev_files = ['projects/data_daily/processed/dev.json']
+    # test_files = ['projects/data_daily/processed/test.json']
+    # vocab_file = 'projects/data_daily/processed/vocab.pkl'
+    # aspect2tokens = json.loads(open('projects/data/processed/aspect2tokens.json', 'r', encoding='utf-8').read())
+    # build_vocab(train_files, dev_files, test_files, vocab_file, aspect2tokens)
