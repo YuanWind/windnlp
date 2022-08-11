@@ -64,7 +64,8 @@ def build_vocab(train_files, dev_files, test_files, vocab_file, aspect2tokens):
     dump_pkl(vocab, vocab_file)
     
 def align(src_path, tgt_path, json_path):
-    # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。
+    # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。并且把位置改为汉字
+    
     fixed_num = 0 
     src = open(src_path,'r', encoding='utf-8').readlines()
     tgt = open(tgt_path,'r', encoding='utf-8').readlines()
@@ -93,6 +94,17 @@ def align(src_path, tgt_path, json_path):
             print(f'{idx1} error.\n{res[idx1]["src"]}\n{s}\n{res[idx1]["tgt"]}\n{t}')
         idx1 += 1
     print(f'{json_path} fixed num: {fixed_num}.')
+    
+    id2sentiment = {7:'负向', 8:'中性', 9:'正向'}
+    for data in res:
+        triples = data['triples']
+        data['triples'] = []
+        sentence = data['src']
+        for tpl in triples:
+            asp = sentence[tpl[0]:tpl[1]+1]
+            opinion = sentence[tpl[2]:(tpl[3]+1)]
+            senti = id2sentiment[tpl[4]]
+            data['triples'].append(f'{asp}__{opinion}__{senti}')
     dump_json(res,json_path)    
 
 def align_main():

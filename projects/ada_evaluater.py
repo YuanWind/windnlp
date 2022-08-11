@@ -123,7 +123,7 @@ def eval_generate(insts, config,is_cut=False, convert2id=False):
         
         # print(r_s1)
         # clothing 数据集还要计算Rouge1、Rouge2、RougeL和METEOR
-        r_s = rouge.get_scores(infer, golden, avg=True)
+        r_s = rouge.get_scores(infer, golden, avg=True, ignore_empty=True)
         # print(r_s)
         res_dict[f"Rouge-1"] = r_s['rouge-1']['r'] * 100
         res_dict[f"Rouge-2"] = r_s['rouge-2']['r'] * 100

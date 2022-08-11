@@ -1,26 +1,9 @@
-from pyrouge import Rouge155
-from scripts.utils import load_json
-def split(path):
-    data = load_json(path)
-    for idx, inst in enumerate(data):
-        tgt = inst['tgt']
-        pred = inst['pred']
-        with open(f'eval/tgt/clothing.{idx:03d}.txt','w',encoding='utf-8') as f:
-            f.write(tgt)
-        with open(f'eval/pred/clothing.A.{idx:03d}.txt','w',encoding='utf-8') as f:
-            f.write(pred)
+from rouge import Rouge 
 
-def main():
-    r = Rouge155()
-    r.system_dir = 'eval/tgt'
-    r.model_dir = 'eval/pred'
-    r.system_filename_pattern = 'clothing.(\d+).txt'
-    r.model_filename_pattern = 'clothing.[A-Z].#ID#.txt'
+hypothesis = "the #### transcript is a written version of each day 's cnn student news program use this transcript to he    lp students with reading comprehension and vocabulary use the weekly newsquiz to test your knowledge of storie s you     saw on cnn student news"
 
-    output = r.convert_and_evaluate()
-    print(output)
-    output_dict = r.output_to_dict(output)
-    print(output_dict)
-    
-split('projects/outs/bart_zh/temp_dir/test_pred.json')
-main()
+reference = "this page includes the show transcript use the transcript to help students with reading comprehension and     vocabulary at the bottom of the page , comment for a chance to be mentioned on cnn student news . you must be a teac    her or a student age # # or older to request a mention on the cnn student news roll call . the weekly newsquiz tests     students ' knowledge of even ts in the news"
+
+rouge = Rouge()
+scores = rouge.get_scores(hypothesis, reference)
+print(scores)

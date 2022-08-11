@@ -1,41 +1,39 @@
 
-nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'ada_05' --model_type 'ori_ada'\
-		--ada_temp 1.0 \
-		> projects/logs/log_ada_05.txt 2>&1 &
-
 sleep 3
 
 nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'ada_06' --model_type 'ori_ada'\
-		--ada_temp 0.5 \
+		--ada_temp 0.5  --resume_from_checkpoint 'projects/outs/ada_06/checkpoint-49990' \
 		> projects/logs/log_ada_06.txt 2>&1 &
 
 sleep 3
 
 nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'ada_07' --model_type 'ori_ada'\
-		--ada_temp 2 \
+		--ada_temp 2 --resume_from_checkpoint 'projects/outs/ada_07/checkpoint-54989' \
 		> projects/logs/log_ada_07.txt 2>&1 &
 
 sleep 3
 
 nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_08' --model_type 'ori_bart'\
-		--learning_rate 5e-5 \
+		--learning_rate 5e-5 --resume_from_checkpoint 'projects/outs/bart_08/checkpoint-69986' \
 		> projects/logs/log_bart_08.txt 2>&1 &
 
 sleep 3
 
 nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_09' --model_type 'ori_bart'\
-		--learning_rate 2e-5 \
+		--learning_rate 2e-5 --resume_from_checkpoint 'projects/outs/bart_09/checkpoint-30000' \
 		> projects/logs/bart_09.txt 2>&1 &
 
 sleep 3
 
 nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'ada_bart_10' --model_type 'ada_bart'\
-		--learning_rate 5e-5 \
+		--learning_rate 5e-5 --resume_from_checkpoint 'projects/outs/ada_bart_10/checkpoint-44991' \
 		> projects/logs/ada_bart_10.txt 2>&1 &
 
-sleep 3
+# sleep 3
 
 
-nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'ada_bart_11' --model_type 'ada_bart'\
-		--learning_rate 2e-5 \
-		> projects/logs/ada_bart_11.txt 2>&1 &
+
+
+# nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'ada_bart_11' --model_type 'ada_bart'\
+# 		--learning_rate 2e-5 \
+# 		> projects/logs/ada_bart_11.txt 2>&1 &

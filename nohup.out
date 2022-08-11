@@ -1,3 +1,6 @@
-定时任务：Process ID 22402, Process Parent ID 4545  --------------------
+定时任务：Process ID 70758, Process Parent ID 103466  --------------------
 
+Run "bash projects/sh_run.sh" and "bash projects/sh_test.sh" in (8, 10, 0, 20).
 执行 bash projects/sh_run.sh
+执行 bash projects/sh_test.sh
+脚本启动成功。程序结束。

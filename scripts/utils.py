@@ -34,7 +34,7 @@ def sort_dict(d, mode='k', reverse=False):
         logger.info('排序失败')
         return d
 
-def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
+def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000, to_used=False):
     """检查GPU的空闲状态，设定判断阈值，默认为5G。先找没人使用的GPU，如果全部GPU都有人用，则随机等待1~5分钟后找小于阈值的可用的GPU。
     Args:
         find_ours (float, optional): _description_. Defaults to 11.5.
@@ -71,12 +71,13 @@ def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
             random_time = random.randint(1,5)
             logger.warning(f'当前无可用的GPU，{random_time}分钟后开始下一次寻找可用的GPU。')
             time.sleep(random_time*60)
-            for i in range(cnt):
-                handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-                info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-                if info.used < threshold_mem:  # 5G  # 小于5G表示虽然有人用，但是用的不多，我也能用
-                    logger.warning(f'GPU-{i} used {info.used/1000000} M, so the program will use GPU-{i}.') 
-                    return i
+            if to_used:
+                for i in range(cnt):
+                    handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+                    info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                    if info.used < threshold_mem:  # 5G  # 小于5G表示虽然有人用，但是用的不多，我也能用
+                        logger.warning(f'GPU-{i} used {info.used/1000000} M, so the program will use GPU-{i}.') 
+                        return i
     except Exception as e:
         logger.warning(e)
         return 0

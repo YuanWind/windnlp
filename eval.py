@@ -162,8 +162,8 @@ def calc_diversity(hyp):
                 ngram = ' '.join(line[idx:idx + n + 1])
                 types[n][ngram] = 1
                 tokens[n] += 1
-    div1 = len(types[0].keys()) / (tokens[0]+1e-6)
-    div2 = len(types[1].keys()) / (tokens[1]+1e-6)
+    div1 = len(types[0].keys()) / (tokens[0]+1e-12)
+    div2 = len(types[1].keys()) / (tokens[1]+1e-12)
     return [div1, div2]
 
 
@@ -233,7 +233,7 @@ if __name__=='__main__':
     # print(eval_generate(insts, tokenizer))
     # split('projects/RRG/outs/daily_100/temp_dir/test_pred_bak.json', 'projects/RRG/outs/daily_100/temp_dir')
     # test()
-    path = 'D:/desktop/RRG_data/Review-Response-Generation/code-py2/res_copynet.json'
+    path = 'eval/res_s2s_valid.json'
     lang = 'zh'
     is_cut = True
     convert2id = False

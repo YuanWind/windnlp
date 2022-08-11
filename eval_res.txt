@@ -1,0 +1,42 @@
+/data/yy/projects/rrg/eval/res_copynet_valid.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 23.90077315335742, 'Rouge-2': 5.969195028315863, 'Rouge-L': 15.525828722194737, 'Meteor': 13.801951624609313, 'Macro_BLEU': 1.1105519999999918, 'dist-1': 2.69, 'dist-2': 7.24, 'ref_dist-1': 16.98, 'ref_dist-2': 58.84} 
+
+/data/yy/projects/rrg/eval/res_copynet_test.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 24.236293000053497, 'Rouge-2': 6.226415780784691, 'Rouge-L': 15.765862122444506, 'Meteor': 14.039927805560085, 'Macro_BLEU': 1.1724289999999933, 'dist-1': 2.76, 'dist-2': 7.32, 'ref_dist-1': 17.09, 'ref_dist-2': 59.39} 
+
+/data/yy/projects/rrg/eval/res_copynet_valid.json with lang=zh, is_cut=True, convert2id=True:
+{'Rouge-1': 23.73108076255807, 'Rouge-2': 5.879560621572241, 'Rouge-L': 15.3781653822476, 'Meteor': 13.789588622559714, 'Macro_BLEU': 1.1105519999999918, 'dist-1': 2.69, 'dist-2': 7.24, 'ref_dist-1': 16.98, 'ref_dist-2': 58.84} 
+
+/data/yy/projects/rrg/eval/res_copynet_valid.json with lang=zh, is_cut=True, convert2id=True:
+{'Rouge-1': 22.64848598047244, 'Rouge-2': 5.459746067705222, 'Rouge-L': 15.822034786255449, 'Meteor': 15.701844774494997, 'Macro_BLEU': 2.504775000000004, 'dist-1': 6.84, 'dist-2': 18.39, 'ref_dist-1': 16.98, 'ref_dist-2': 58.84} 
+
+eval/res_copynet_valid_id.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 15.202932866405469, 'Rouge-2': 1.1905491785346363, 'Rouge-L': 8.60680390196532, 'Meteor': 9.901901557782887, 'Macro_BLEU': 0.5982649999999982, 'dist-1': 6.92, 'dist-2': 18.51, 'ref_dist-1': 20.65, 'ref_dist-2': 71.25} 
+
+eval/res_copynet_valid_id.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 22.355206267486015, 'Rouge-2': 5.522058003938672, 'Rouge-L': 15.945063470186604, 'Meteor': 15.750696144433288, 'Macro_BLEU': 2.537503999999995, 'dist-1': 6.92, 'dist-2': 18.51, 'ref_dist-1': 15.9, 'ref_dist-2': 58.72} 
+
+eval/res_copynet_valid.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 22.169404207525453, 'Rouge-2': 5.5201541812061725, 'Rouge-L': 15.971463926711301, 'Meteor': 15.70522499976818, 'Macro_BLEU': 2.504775000000004, 'dist-1': 6.84, 'dist-2': 18.39, 'ref_dist-1': 16.98, 'ref_dist-2': 58.84} 
+
+eval/res_copynet_valid.json with lang=zh, is_cut=True, convert2id=True:
+{'Rouge-1': 22.64848598047244, 'Rouge-2': 5.459746067705222, 'Rouge-L': 15.822034786255449, 'Meteor': 15.701844774494997, 'Macro_BLEU': 2.504775000000004, 'dist-1': 6.84, 'dist-2': 18.39, 'ref_dist-1': 16.98, 'ref_dist-2': 58.84} 
+
+eval/res_copynet_test.json with lang=zh, is_cut=True, convert2id=True:
+{'Rouge-1': 22.352076762066318, 'Rouge-2': 5.710558078233354, 'Rouge-L': 16.070753253884778, 'Meteor': 15.79999518330003, 'Macro_BLEU': 2.704569000000015, 'dist-1': 7.58, 'dist-2': 19.93, 'ref_dist-1': 17.09, 'ref_dist-2': 59.39} 
+
+eval/res_copynet_test.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 22.883711459810428, 'Rouge-2': 6.039286703938822, 'Rouge-L': 16.618276620396244, 'Meteor': 16.051304963959243, 'Macro_BLEU': 2.7417620000000062, 'dist-1': 8.85, 'dist-2': 23.95, 'ref_dist-1': 17.09, 'ref_dist-2': 59.39} 
+
+eval/res_s2s_test.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 27.583005475339085, 'Rouge-2': 11.556204965179647, 'Rouge-L': 24.225582048474475, 'Meteor': 21.537585182427367, 'Macro_BLEU': 7.261820999999993, 'dist-1': 7.8, 'dist-2': 22.82, 'ref_dist-1': 17.09, 'ref_dist-2': 59.39} 
+
+eval/res_s2s_test.json with lang=zh, is_cut=True, convert2id=True:
+{'Rouge-1': 27.39857007105517, 'Rouge-2': 11.387155230729133, 'Rouge-L': 24.076040340460022, 'Meteor': 21.53308345232931, 'Macro_BLEU': 7.261820999999993, 'dist-1': 7.8, 'dist-2': 22.82, 'ref_dist-1': 17.09, 'ref_dist-2': 59.39} 
+
+eval/res_s2s_test.json with lang=zh, is_cut=True, convert2id=True:
+{'Rouge-1': 27.39857007105517, 'Rouge-2': 11.387155230729133, 'Rouge-L': 24.076040340460022, 'Meteor': 21.53308345232931, 'Macro_BLEU': 7.261820999999993, 'dist-1': 7.8, 'dist-2': 22.82, 'ref_dist-1': 17.09, 'ref_dist-2': 59.39} 
+
+eval/res_s2s_valid.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 28.122505298411376, 'Rouge-2': 11.689670630272758, 'Rouge-L': 23.996013984172595, 'Meteor': 18.029006216479345, 'Macro_BLEU': 3.0596329999999945, 'dist-1': 2.69, 'dist-2': 7.98, 'ref_dist-1': 16.98, 'ref_dist-2': 58.84} 
+
