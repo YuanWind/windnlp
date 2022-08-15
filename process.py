@@ -15,7 +15,7 @@ def main():
     # copynet  seq2seqkbfinal
     model = 'seq2seqkbfinal'
     # s2s, cp, s2s_atte
-    name = 's2s'
+    name = 's2s_atte'
     src_path = f'projects/data/ori/{tp}_source.txt'
     tgt_path = f'projects/data/ori/{tp}_target.txt'
     pre_path = f'/data/yy/projects/rrg_others/rrg_2019/code-py3/output/{model}_greedy_review_{name}_{tp}.txt'

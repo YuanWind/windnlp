@@ -40,3 +40,21 @@ eval/res_s2s_test.json with lang=zh, is_cut=True, convert2id=True:
 eval/res_s2s_valid.json with lang=zh, is_cut=True, convert2id=False:
 {'Rouge-1': 28.122505298411376, 'Rouge-2': 11.689670630272758, 'Rouge-L': 23.996013984172595, 'Meteor': 18.029006216479345, 'Macro_BLEU': 3.0596329999999945, 'dist-1': 2.69, 'dist-2': 7.98, 'ref_dist-1': 16.98, 'ref_dist-2': 58.84} 
 
+projects/outs/bart_09/temp_dir/dev_pred.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 0.0375, 'Rouge-2': 0.0, 'Rouge-L': 0.037857142608163266, 'Meteor': 0.015, 'Macro_BLEU': 0.005334, 'dist-1': 71.5, 'dist-2': 0.0, 'ref_dist-1': 100.0, 'ref_dist-2': 0.0} 
+
+projects/outs/bart_09/temp_dir/dev_pred.json with lang=zh, is_cut=False, convert2id=False:
+{'Rouge-1': 24.797195841667705, 'Rouge-2': 6.577141863193393, 'Rouge-L': 16.675177350016792, 'Meteor': 17.521980002686092, 'Macro_BLEU': 2.9784340000000067, 'dist-1': 7.46, 'dist-2': 21.32, 'ref_dist-1': 16.78, 'ref_dist-2': 58.95} 
+
+projects/outs/bart_09/temp_dir/dev_pred.json with lang=zh, is_cut=False, convert2id=False:
+{'Rouge-1': 24.797195841667705, 'Rouge-2': 6.577141863193393, 'Rouge-L': 16.675177350016792, 'Meteor': 17.521980002686092, 'Macro_BLEU': 2.9784340000000067, 'Micro_BLEU_1': 28.13, 'Micro_BLEU_2': 12.99, 'Micro_BLEU_3': 7.05, 'Micro_BLEU_4': 4.51, 'dist-1': 7.46, 'dist-2': 21.32, 'ref_dist-1': 16.78, 'ref_dist-2': 58.95} 
+
+eval/res_s2s_valid.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 29.665925557949375, 'Rouge-2': 14.146714978409783, 'Rouge-L': 26.763145945874278, 'Meteor': 23.796688385619408, 'Macro_BLEU': 9.652161000000014, 'Micro_BLEU_1': 31.74, 'Micro_BLEU_2': 20.27, 'Micro_BLEU_3': 15.23, 'Micro_BLEU_4': 12.58, 'dist-1': 7.5, 'dist-2': 22.93, 'ref_dist-1': 16.98, 'ref_dist-2': 58.84} 
+
+eval/res_s2s_valid.json with lang=zh, is_cut=True, convert2id=False:
+{'Rouge-1': 29.665925557949375, 'Rouge-2': 14.146714978409783, 'Rouge-L': 26.763145945874278, 'Meteor': 23.796688385619408, 'Macro_BLEU': 9.652161000000014, 'Micro_BLEU_1': 31.74, 'Micro_BLEU_2': 20.27, 'Micro_BLEU_3': 15.23, 'Micro_BLEU_4': 12.58, 'Micro_BLEU': 19.955, 'dist-1': 7.5, 'dist-2': 22.93, 'ref_dist-1': 16.98, 'ref_dist-2': 58.84} 
+
+projects/outs/bart_09/temp_dir/dev_pred.json with lang=zh, is_cut=False, convert2id=False:
+{'Rouge-1': 24.797195841667705, 'Rouge-2': 6.577141863193393, 'Rouge-L': 16.675177350016792, 'Meteor': 17.521980002686092, 'Macro_BLEU': 2.9784340000000067, 'Micro_BLEU_1': 28.13, 'Micro_BLEU_2': 12.99, 'Micro_BLEU_3': 7.05, 'Micro_BLEU_4': 4.51, 'Micro_BLEU': 13.169999999999998, 'dist-1': 7.46, 'dist-2': 21.32, 'ref_dist-1': 16.78, 'ref_dist-2': 58.95} 
+

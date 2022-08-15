@@ -16,7 +16,7 @@
 			"name": "Python: main",
 			"type": "python",
 			"request": "launch",
-			"program": "projects/RRG/main.py",
+			"program": "projects/main.py",
 			"args": [
 				"--postfix", "debug"
 			],
@@ -32,7 +32,7 @@
 				"--dataset_name", "xsum",
 				"--model_name_or_path", "facebook/bart-base",
 				"--do_train","--do_eval",
-				"--output_dir","projects/RRG/outs/sum",
+				"--output_dir","projects/outs/sum",
 				"--per_device_train_batch_size=4",
 				"--per_device_eval_batch_size=4",
 				"--overwrite_output_dir",
@@ -45,9 +45,9 @@
 			"name": "Python: main-chinese",
 			"type": "python",
 			"request": "launch",
-			"program": "projects/RRG/main.py",
+			"program": "projects/main.py",
 			"args": [
-				"--config_file", "projects/RRG/main_chinese.cfg",
+				"--config_file", "projects/main_chinese.cfg",
 				"--postfix", "debug"
 			],
 			"console": "integratedTerminal",

@@ -125,8 +125,8 @@ def align_main():
     align(src_path, tgt_path, json_path)
     
 if __name__ == '__main__':
-    convert_data('projects/data/processed', 'projects/data/ori')
-    align_main()  # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。
+    # convert_data('projects/data/processed', 'projects/data/ori')
+    # align_main()  # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。
     train_files = ['projects/data/processed/train.json']
     dev_files = ['projects/data/processed/dev.json']
     test_files = ['projects/data/processed/test.json']

@@ -19,9 +19,13 @@ nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 
 
 sleep 3
 
-nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_09' --model_type 'ori_bart'\
-		--learning_rate 2e-5 --resume_from_checkpoint 'projects/outs/bart_09/checkpoint-30000' \
-		> projects/logs/bart_09.txt 2>&1 &
+nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_12' --model_type 'ori_bart'\
+		--learning_rate 2e-5 --dropout 0.1 --attn_dropout 0.1 \
+		> projects/logs/bart_12.txt 2>&1 &
+
+nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_13' --model_type 'ori_bart'\
+		--learning_rate 2e-5 --dropout 0.1 --attn_dropout 0.1 --pretrained_model_name_or_path 'facebook/bart-base' \
+		> projects/logs/bart_13.txt 2>&1 &
 
 sleep 3
 

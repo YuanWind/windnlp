@@ -71,7 +71,7 @@ def eval_generate(insts,tokenizer,language='en',is_cut=False, convert2id=False):
             ms_list.append(m_s)
         res_dict[f"Meteor"] = (sum(ms_list)/len(ms_list))*100
         
-        # TODO 计算宏平均 BLEU-1-4
+        # TODO 计算宏平均 BLEU
         chencherry = SmoothingFunction()
         macro_bleu_scores = []
         for idx in range(len(infer)):
@@ -79,13 +79,14 @@ def eval_generate(insts,tokenizer,language='en',is_cut=False, convert2id=False):
             macro_bleu_scores.append(b_s)
 
         res_dict[f"Macro_BLEU"] = sum(macro_bleu_scores)/len(macro_bleu_scores)
-        # for i in range(4):
-        #     weights = [1 / (i + 1)] * (i + 1)
-        #     b_s = round(100 * corpus_bleu(
-        #                                 golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
-        #     bleu_score.append(b_s)
-        # res_dict[f"avg_BLEU_1-4"] = sum(bleu_score)/len(bleu_score)
         
+        bleu_score = []
+        for i in range(4):
+            weights = [1 / (i + 1)] * (i + 1)
+            b_s = round(100 * corpus_bleu(golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
+            bleu_score.append(b_s)
+            res_dict[f"Micro_BLEU_{i+1}"] = b_s
+        res_dict[f"Micro_BLEU"] = sum(bleu_score)/len(bleu_score)
         # eval dist
         # clothing数据只考虑前200条计算dist
         for idx, x in enumerate(calc_diversity(infer[:200])):
@@ -233,9 +234,9 @@ if __name__=='__main__':
     # print(eval_generate(insts, tokenizer))
     # split('projects/RRG/outs/daily_100/temp_dir/test_pred_bak.json', 'projects/RRG/outs/daily_100/temp_dir')
     # test()
-    path = 'eval/res_s2s_valid.json'
+    path = 'projects/outs/bart_09/temp_dir/dev_pred.json'
     lang = 'zh'
-    is_cut = True
+    is_cut = False
     convert2id = False
     insts = load_json(path)
     res = eval_generate(insts, tokenizer, language=lang, is_cut = is_cut, convert2id = convert2id)

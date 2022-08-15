@@ -96,7 +96,7 @@ class RRGVocab(BaseVocab):
     def build(self, aspect2tokens):
         aspect_set = set(aspect2tokens.keys())
         self.set_labels('aspect', aspect_set)
-        
+        self.set_labels('sentiment', {'正向','负向','中性'})
         for k, vs in aspect2tokens.items():
             for v in vs:
                 self.token2aspect[v] = k    

@@ -11,10 +11,12 @@ from typing import OrderedDict
 from modules.models.adalabel.modeling_adalabel import AdaLabLoss, AdaLabel_BartForConditionalGeneration, AdaLabelForConditionalGeneration
 from modules.models.adalabel.configuration_adalabel import AdaLabelConfig
 from transformers.models.bart import BartConfig,BartForConditionalGeneration
+
 import torch.nn.functional as F
 import torch
+import torch.nn as nn
 import logging
-from modules.nn.base_model import BaseModel
+from modules.nn.base_model import BaseModel, get_parameter_names
 
 logger = logging.getLogger(__name__.replace('_', ''))
 
@@ -35,6 +37,7 @@ class RRGModel(BaseModel):
         
         else:
             self.adalabel_config = MODEL_MAPPING[config.model_type][0].from_pretrained(config.pretrained_model_name_or_path,
+                                                                                       vocab_size = config.vocab_size,
                                                                             dropout = config.dropout, attention_dropout=config.attn_dropout,    
                                                                             pad_token_id=config.pad_token_id, bos_token_id=config.bos_token_id,
                                                                             eos_token_id=config.eos_token_id, decoder_start_token_id=config.eos_token_id)
@@ -43,7 +46,35 @@ class RRGModel(BaseModel):
         
         self.criterion = AdaLabLoss(self.adalabel_config.vocab_size, config.per_device_train_batch_size,
                                     ignore_index=config.pad_token_id, temperature=config.ada_temp, eos_index=config.eos_token_id)
-        
+    
+    def optimizer_grouped_parameters(self, weight_decay):
+        """为模型参数设置不同的优化器超参，比如分层学习率等，此处默认为hf的初始化方式
+        """
+        decay_parameters = get_parameter_names(self, [nn.LayerNorm])
+        decay_parameters = [name for name in decay_parameters if "bias" not in name]
+        another_lr_parameters = [name for name in decay_parameters if "bart" not in name]
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in self.named_parameters() if n in decay_parameters and n in another_lr_parameters],
+                "weight_decay": weight_decay,
+                "learing_rate": self.config.non_pretrain_lr
+            },
+            {
+                "params": [p for n, p in self.named_parameters() if n in decay_parameters and n not in another_lr_parameters],
+                "weight_decay": weight_decay 
+            },
+            {
+                "params": [p for n, p in self.named_parameters() if n not in decay_parameters and n in another_lr_parameters],
+                "weight_decay": 0.0,
+                "learing_rate": self.config.non_pretrain_lr
+            },
+            {
+                "params": [p for n, p in self.named_parameters() if n not in decay_parameters and n not in another_lr_parameters],
+                "weight_decay": 0.0
+            }
+        ]
+        return optimizer_grouped_parameters
+    
     def forward(self, **kwargs):
         src_input_ids, tgt_input_ids = kwargs.pop('src_input_ids'), kwargs.pop('tgt_input_ids', None)
         src_attention_mask, tgt_attention_mask = kwargs.pop('src_attention_mask'), kwargs.pop('tgt_attention_mask', None)
