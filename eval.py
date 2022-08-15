@@ -8,10 +8,10 @@ from transformers import BertTokenizer, BartTokenizer
 from scripts.utils import load_json
 import torch
 
-word2id = {'UNK':"0"}
-max_id_len = 1
+
 def eval_generate(insts,tokenizer,language='en',is_cut=False, convert2id=False):
-    global max_id_len
+    word2id = {'UNK':"0"}
+    max_id_len = 1
     res_dict = {}
     golden, infer = [], []
     pred_ids, tgt_ids = [], []

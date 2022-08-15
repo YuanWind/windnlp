@@ -79,11 +79,10 @@ class AdaEvaluater:
         cls.res.extend(insts)
         
         
-word2id = {'UNK':"0"}
-max_id_len = 1    
+   
 def eval_generate(insts, config,is_cut=False, convert2id=False):
-    
-    global max_id_len
+    word2id = {'UNK':"0"}
+    max_id_len = 1 
     res_dict = {}
     golden, infer = [], []
     if config.language == 'zh':
@@ -91,7 +90,6 @@ def eval_generate(insts, config,is_cut=False, convert2id=False):
         rouge = Rouge()
         
         for inst in insts:
-            
             if not is_cut:
                 gold_words = jieba.cut(inst['tgt'])
                 infer_words = jieba.cut(inst['pred'])
@@ -149,12 +147,14 @@ def eval_generate(insts, config,is_cut=False, convert2id=False):
             macro_bleu_scores.append(b_s)
 
         res_dict[f"Macro_BLEU"] = sum(macro_bleu_scores)/len(macro_bleu_scores)
-        # for i in range(4):
-        #     weights = [1 / (i + 1)] * (i + 1)
-        #     b_s = round(100 * corpus_bleu(
-        #                                 golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
-        #     bleu_score.append(b_s)
-        # res_dict[f"avg_BLEU_1-4"] = sum(bleu_score)/len(bleu_score)
+        
+        bleu_score = []
+        for i in range(4):
+            weights = [1 / (i + 1)] * (i + 1)
+            b_s = round(100 * corpus_bleu(golden, infer, weights=weights, smoothing_function=chencherry.method1), 2)
+            bleu_score.append(b_s)
+            res_dict[f"Micro_BLEU_{i+1}"] = b_s
+        res_dict[f"Micro_BLEU"] = sum(bleu_score)/len(bleu_score)
         
         # eval dist
         # clothing数据只考虑前200条计算dist
