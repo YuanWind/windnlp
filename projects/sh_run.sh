@@ -35,6 +35,10 @@ nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 
 
 # sleep 3
 
+nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_14' --model_type 'ori_bart'\
+		--learning_rate 2e-5 --dropout 0.1 --attn_dropout 0.1 \
+		> projects/logs/bart_14.txt 2>&1 &
+
 
 
 

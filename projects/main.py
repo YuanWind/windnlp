@@ -132,6 +132,7 @@ def main(config_path, args=None, extra_args=None):   # sourcery skip: extract-du
     
     logger.info(f'Load model state from {config.best_model_file}')
     trainer.model.load_state_dict(torch.load(config.best_model_file))
+    config.set('generate_in_eval', True) # Test 阶段需要进行generation
     if config.trainer_args.do_eval and dev_set is not None:
         logger.info('Start dev...')
         Evaluater.stage = 'dev'

@@ -43,15 +43,19 @@ class Datacollator:
             features = self.convert_method(self.config, batch_data, self.tokenizer, self.vocab)
         else:
             features = batch_data
+        if type(features) is list:
+            # 如果是list，代表需要按照输入参数分开
+            model_params = defaultdict(list)
+            for one_item in features:
+                for k,v in one_item.items():
+                    model_params[k].append(v)
 
-        model_params = defaultdict(list)
-        for one_item in features:
-            for k,v in one_item.items():
-                model_params[k].append(v)
-
-        for k in model_params:
-            if type(model_params[k][0]) is torch.Tensor:
-                model_params[k] = torch.stack(model_params[k])
+            for k in model_params:
+                if type(model_params[k][0]) is torch.Tensor:
+                    model_params[k] = torch.stack(model_params[k])
+        else:
+            # 如果是dict，代表已经按照模型参数分开了
+            model_params = features
         return model_params
 
 

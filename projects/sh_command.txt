@@ -57,3 +57,14 @@ python projects/main.py --do_train false --config_file projects/main_chinese.cfg
 							--best_model_file 'projects/outs/ada_bart_zh/best_model/best.pt'
 
 
+nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_15' --model_type 'ori_bart'\
+		--learning_rate 2e-5 --dropout 0.1 --attn_dropout 0.1 --add_triples False \
+		> projects/logs/bart_15.txt 2>&1 &
+
+nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_16' --model_type 'ori_bart'\
+		--learning_rate 2e-5 --dropout 0.1 --attn_dropout 0.1 --add_triples True \
+		> projects/logs/bart_16.txt 2>&1 &
+
+nohup python projects/main.py --config_file projects/main_chinese.cfg --postfix 'bart_17' --model_type 'ori_bart'\
+		--learning_rate 2e-5 --dropout 0.1 --attn_dropout 0.1 --add_triples True --num_train_epochs 10 \
+		> projects/logs/bart_17.txt 2>&1 &

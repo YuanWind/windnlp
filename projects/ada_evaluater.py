@@ -40,11 +40,12 @@ class AdaEvaluater:
     def evaluate(cls):
         # save result
         eval_res = cls.res
-        res_file_path = cls.config.dev_pred_file if cls.stage == 'dev' else cls.config.test_pred_file
-        dump_json(eval_res,res_file_path)
-        
-        # Metrics
-        return_res = eval_generate(eval_res, cls.config)
+        return_res = {}
+        if len(eval_res) > 0:
+            res_file_path = cls.config.dev_pred_file if cls.stage == 'dev' else cls.config.test_pred_file
+            dump_json(eval_res,res_file_path)
+            # Metrics
+            return_res = eval_generate(eval_res, cls.config)
         return_res['acc'] = (cls.total_correct/cls.total_num_words).item()
         return_res['ppl'] = torch.exp(min(cls.total_loss/cls.total_num_words, 30)).item()
         return_res['avg_loss'] = (cls.total_loss/cls.total_num_words).item()
@@ -60,23 +61,26 @@ class AdaEvaluater:
     
     @classmethod
     def steps_evaluate(cls, preds_host, inputs_host, labels_host):
-        start = cls.finished_idx
-        generate_ids = preds_host[1]
-        cls.finished_idx += len(generate_ids)
-        end = cls.finished_idx
-        insts = cls.vocab.dev_insts[start:end] if cls.stage == 'dev' else cls.vocab.test_insts[start:end]
-        tokenizer = cls.tokenizer
-        
-        res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True)
-        for idx, inst in enumerate(insts):
-            triples = inst.pop('triples')
-            if cls.config.language == 'zh':
-                inst['pred'] = res[idx].replace(' ', '')
-            else:
-                inst['pred'] = res[idx]
-            # 把triples放到最后。方便对比tgt和pred
-            inst['triples'] = triples 
-        cls.res.extend(insts)
+        if type(preds_host) is tuple:
+            start = cls.finished_idx
+            generate_ids = preds_host[1]
+            cls.finished_idx += len(generate_ids)
+            end = cls.finished_idx
+            insts = cls.vocab.dev_insts[start:end] if cls.stage == 'dev' else cls.vocab.test_insts[start:end]
+            tokenizer = cls.tokenizer
+            
+            res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True)
+            for idx, inst in enumerate(insts):
+                triples = inst.pop('triples')
+                if cls.config.language == 'zh':
+                    inst['pred'] = res[idx].replace(' ', '')
+                else:
+                    inst['pred'] = res[idx]
+                # 把triples放到最后。方便对比tgt和pred
+                inst['triples'] = triples 
+            cls.res.extend(insts)
+        else:
+            pass
         
         
    

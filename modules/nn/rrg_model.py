@@ -8,7 +8,7 @@
 '''
 from typing import OrderedDict
 
-from modules.models.adalabel.modeling_adalabel import AdaLabLoss, AdaLabel_BartForConditionalGeneration, AdaLabelForConditionalGeneration
+from modules.models.adalabel.modeling_adalabel import AdaLabLoss, AdaLabel_BartForConditionalGeneration, AdaLabelForConditionalGeneration, PHV_BartForConditionalGeneration
 from modules.models.adalabel.configuration_adalabel import AdaLabelConfig
 from transformers.models.bart import BartConfig,BartForConditionalGeneration
 
@@ -23,18 +23,20 @@ logger = logging.getLogger(__name__.replace('_', ''))
 MODEL_MAPPING = {
     'ori_ada':(AdaLabelConfig, AdaLabelForConditionalGeneration),
     'ori_bart':(BartConfig,BartForConditionalGeneration),
-    'ada_bart':(BartConfig,AdaLabel_BartForConditionalGeneration)
+    'ada_bart':(BartConfig,AdaLabel_BartForConditionalGeneration),
+    'ph_bart':(BartConfig,PHV_BartForConditionalGeneration),
+    
 }
 class RRGModel(BaseModel):
     def __init__(self, config, evaluater):
         super().__init__(config)
         self.evaluater = evaluater
+        # 模型
         if config.model_type == 'ori_ada':
             self.adalabel_config = AdaLabelConfig(vocab_size = config.vocab_size, dropout = config.dropout, attention_dropout=config.attn_dropout, 
                                                   pad_token_id=config.pad_token_id, bos_token_id=config.bos_token_id,
                                                   eos_token_id=config.eos_token_id, decoder_start_token_id=config.eos_token_id)
             self.bart = AdaLabelForConditionalGeneration(self.adalabel_config)
-        
         else:
             self.adalabel_config = MODEL_MAPPING[config.model_type][0].from_pretrained(config.pretrained_model_name_or_path,
                                                                                        vocab_size = config.vocab_size,
@@ -44,9 +46,11 @@ class RRGModel(BaseModel):
             self.bart = MODEL_MAPPING[config.model_type][1].from_pretrained(config.pretrained_model_name_or_path, 
                                                                      config = self.adalabel_config)
         
+        
         self.criterion = AdaLabLoss(self.adalabel_config.vocab_size, config.per_device_train_batch_size,
                                     ignore_index=config.pad_token_id, temperature=config.ada_temp, eos_index=config.eos_token_id)
     
+
     def optimizer_grouped_parameters(self, weight_decay):
         """为模型参数设置不同的优化器超参，比如分层学习率等，此处默认为hf的初始化方式
         """
@@ -77,20 +81,30 @@ class RRGModel(BaseModel):
     
     def forward(self, **kwargs):
         src_input_ids, tgt_input_ids = kwargs.pop('src_input_ids'), kwargs.pop('tgt_input_ids', None)
-        src_attention_mask, tgt_attention_mask = kwargs.pop('src_attention_mask'), kwargs.pop('tgt_attention_mask', None)
-
+        src_attention_mask, decoder_attention_mask = kwargs.pop('src_attention_mask'), kwargs.pop('tgt_attention_mask'),
+        bat_triple_idxs = kwargs.pop('bat_triple_idxs',None)
+        
         decoder_input_ids = self.bart.prepare_decoder_input_ids_from_labels(tgt_input_ids)
-        outs = self.bart(src_input_ids, src_attention_mask,decoder_input_ids=decoder_input_ids, labels= None)
+        if self.config.model_type not in ['ph_bart']:
+            outs = self.bart(src_input_ids, src_attention_mask,decoder_input_ids=decoder_input_ids, decoder_attention_mask= decoder_attention_mask, labels= None)
+            
         logits, logits2 = outs[0], outs[1]
         
         # 计算损失值
         loss,loss2,nll_loss,ada_loss = self.calc_loss(logits, logits2, tgt_input_ids)
         
         generate_ids = None
-        if not self.training:
+        if not self.training and self.config.generate_in_eval:
             generate_ids = self.generate(src_input_ids)
         num_words = self.record_state(logits, tgt_input_ids, loss if ada_loss is None else ada_loss, logits2, loss2, nll_loss, generate_ids)
-        return {'loss': loss / num_words, 'logits': logits, 'generate_ids': generate_ids}
+        
+        forward_outs = {
+            'loss': loss / num_words, 
+            'logits': logits
+        }
+        if generate_ids is not None:
+            forward_outs['generate_ids'] = generate_ids
+        return forward_outs
 
     def generate(self, src_input_ids):
         generate_ids = self.bart.generate(src_input_ids, max_length=self.config.max_gen_length, 
