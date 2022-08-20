@@ -8,7 +8,7 @@
 '''
 from typing import OrderedDict
 
-from modules.models.adalabel.modeling_adalabel import AdaLabLoss, AdaLabel_BartForConditionalGeneration, AdaLabelForConditionalGeneration, PHV_BartForConditionalGeneration
+from modules.models.adalabel.modeling_adalabel import AdaLabLoss, AdaLabel_BartForConditionalGeneration, AdaLabelForConditionalGeneration, PHV_BartForConditionalGeneration, RRGBartForConditionalGeneration
 from modules.models.adalabel.configuration_adalabel import AdaLabelConfig
 from transformers.models.bart import BartConfig,BartForConditionalGeneration
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__.replace('_', ''))
 
 MODEL_MAPPING = {
     'ori_ada':(AdaLabelConfig, AdaLabelForConditionalGeneration),
-    'ori_bart':(BartConfig,BartForConditionalGeneration),
+    'ori_bart':(BartConfig,RRGBartForConditionalGeneration),
     'ada_bart':(BartConfig,AdaLabel_BartForConditionalGeneration),
     'ph_bart':(BartConfig,PHV_BartForConditionalGeneration),
     
@@ -80,13 +80,13 @@ class RRGModel(BaseModel):
         return optimizer_grouped_parameters
     
     def forward(self, **kwargs):
-        src_input_ids, tgt_input_ids = kwargs.pop('src_input_ids'), kwargs.pop('tgt_input_ids', None)
-        src_attention_mask, decoder_attention_mask = kwargs.pop('src_attention_mask'), kwargs.pop('tgt_attention_mask'),
+        src_input_ids, tgt_input_ids, pi_input_ids = kwargs.pop('src_input_ids'), kwargs.pop('tgt_input_ids', None), kwargs.pop('pi_input_ids', None)
+        src_attention_mask, decoder_attention_mask, pi_attention_mask = kwargs.pop('src_attention_mask'), kwargs.pop('tgt_attention_mask'),kwargs.pop('pi_attention_mask')
         bat_triple_idxs = kwargs.pop('bat_triple_idxs',None)
         
         decoder_input_ids = self.bart.prepare_decoder_input_ids_from_labels(tgt_input_ids)
         if self.config.model_type not in ['ph_bart']:
-            outs = self.bart(src_input_ids, src_attention_mask,decoder_input_ids=decoder_input_ids, decoder_attention_mask= decoder_attention_mask, labels= None)
+            outs = self.bart(src_input_ids, src_attention_mask,decoder_input_ids=decoder_input_ids, decoder_attention_mask= decoder_attention_mask, labels= None, pi_input_ids = pi_input_ids, pi_attention_mask=pi_attention_mask)
             
         logits, logits2 = outs[0], outs[1]
         

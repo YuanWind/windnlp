@@ -58,7 +58,7 @@ def build_data(config, test_insts = None, train_insts=None, dev_insts=None):
     if config.add_dev_data_to_train:
         vocab.train_insts = vocab.train_insts + vocab.dev_insts
     
-    if config.pretrained_model_name_or_path == 'fnlp/bart-base-chinese' :
+    if config.pretrained_model_name_or_path in ['fnlp/bart-base-chinese', 'fnlp/bart-large-chinese'] :
         tokenizer = BertTokenizer.from_pretrained(config.pretrained_model_name_or_path)
     else:
         tokenizer = AutoTokenizer.from_pretrained(config.pretrained_model_name_or_path)

@@ -91,19 +91,22 @@ class RRGDataset(BaseDataset):
         features = {
             'src_input_ids': [],
             'tgt_input_ids':[],
+            'pi_input_ids':[],
             'src_attention_mask': [],
             'tgt_attention_mask': [],
+            'pi_attention_mask':[],
             'bat_triple_idxs': []
         }
         src_text_max_len = config.max_seq_len
         for idx, inst in enumerate(insts):
             src_tokenized = tokenizer(inst['src'], add_special_tokens=False)
-            tgt_tokenized = tokenizer(inst['tgt'], add_special_tokens=False)
+            tgt_tokenized = tokenizer(inst['tgt'], add_special_tokens=True)
+            pi_tokenized = tokenizer(inst['properties'], add_special_tokens=True)
             src_input_ids = [cls_id] + src_tokenized['input_ids'][:src_text_max_len] + [sep_id]
             triples_sep_idxs = []
             if config.add_triples:
                 for triple in inst['triples']:
-                    triples_sep_idxs.append(len(src_input_ids)-1)
+                    triples_sep_idxs.append([len(src_input_ids)-1])
                     t_t = tokenizer(triple, add_special_tokens=False)
                     src_input_ids += t_t['input_ids'] + [sep_id]
                     if len(src_input_ids) > 512:
@@ -111,12 +114,13 @@ class RRGDataset(BaseDataset):
                         break
             
             src_attention_mask = [1] * len(src_input_ids)
-            tgt_input_ids = tgt_tokenized['input_ids']
-            tgt_attention_mask = tgt_tokenized['attention_mask']
+
             features['src_input_ids'].append(src_input_ids)
-            features['tgt_input_ids'].append(tgt_input_ids)
+            features['tgt_input_ids'].append(tgt_tokenized['input_ids'])
+            features['pi_input_ids'].append(pi_tokenized['input_ids'])
             features['src_attention_mask'].append(src_attention_mask)
-            features['tgt_attention_mask'].append(tgt_attention_mask)
+            features['tgt_attention_mask'].append(tgt_tokenized['attention_mask'])
+            features['pi_attention_mask'].append(pi_tokenized['attention_mask'])
             features['bat_triple_idxs'].append(triples_sep_idxs)
             
         for k,v in features.items():

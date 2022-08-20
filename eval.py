@@ -9,7 +9,7 @@ from scripts.utils import load_json
 import torch
 
 
-def eval_generate(insts,tokenizer,language='en',is_cut=False, convert2id=False):
+def eval_generate(insts,tokenizer,language='en',is_cut=False, convert2id=False,use_jieba=False):
     word2id = {'UNK':"0"}
     max_id_len = 1
     res_dict = {}
@@ -18,13 +18,18 @@ def eval_generate(insts,tokenizer,language='en',is_cut=False, convert2id=False):
     
     if language == 'zh':
         import jieba
-        rouge = Rouge()
-        
+        # jieba.load_userdict("projects/data/userdict.txt")
+        rouge = Rouge(["rouge-1", "rouge-2"])
+        # rouge = Rouge()
+        length_list = {'tgt':[],'pred':[]}
         for inst in insts:
-            
             if not is_cut:
-                gold_words = jieba.cut(inst['tgt'])
-                infer_words = jieba.cut(inst['pred'])
+                if use_jieba:
+                    gold_words = list(jieba.cut(inst['tgt']))
+                    infer_words = list(jieba.cut(inst['pred']))
+                else:
+                    gold_words = list(inst['tgt'])
+                    infer_words = list(inst['pred'])
             else:
                 gold_words = inst['tgt'].split(' ')
                 infer_words = inst['pred'].split(' ')
@@ -50,14 +55,18 @@ def eval_generate(insts,tokenizer,language='en',is_cut=False, convert2id=False):
                    
             golden.append(' '.join(gold_words))
             infer.append(' '.join(infer_words))
-        
+            length_list['tgt'].append(len(gold_words))
+            length_list['pred'].append(len(infer_words))
+            
+        res_dict[f"tgt-avg-len"] = sum(length_list['tgt'])/len(length_list['tgt'])
+        res_dict[f"pred-avg-len"] = sum(length_list['pred'])/len(length_list['pred'])
         # print(r_s1)
         # clothing 数据集还要计算Rouge1、Rouge2、RougeL和METEOR
-        r_s = rouge.get_scores(infer, golden, avg=True)
+        r_s = rouge.get_scores(infer, golden, avg=True, ignore_empty=True)
         # print(r_s)
-        res_dict[f"Rouge-1"] = r_s['rouge-1']['r'] * 100
-        res_dict[f"Rouge-2"] = r_s['rouge-2']['r'] * 100
-        res_dict[f"Rouge-L"] = r_s['rouge-l']['f'] * 100
+        res_dict[f"Rouge-1"] = r_s['rouge-1']['f'] * 100
+        res_dict[f"Rouge-2"] = r_s['rouge-2']['f'] * 100
+        # res_dict[f"Rouge-L"] = r_s['rouge-l']['f'] * 100
         
         
         
@@ -234,13 +243,15 @@ if __name__=='__main__':
     # print(eval_generate(insts, tokenizer))
     # split('projects/RRG/outs/daily_100/temp_dir/test_pred_bak.json', 'projects/RRG/outs/daily_100/temp_dir')
     # test()
-    path = 'projects/outs/bart_09/temp_dir/dev_pred.json'
+    path = 'eval/res_s2s_valid copy.json'
+    path = 'projects/outs/ada_bart_19/temp_dir/dev_pred.json'
     lang = 'zh'
     is_cut = False
+    use_jieba = True
     convert2id = False
     insts = load_json(path)
-    res = eval_generate(insts, tokenizer, language=lang, is_cut = is_cut, convert2id = convert2id)
-    res_str = f'{path} with lang={lang}, is_cut={is_cut}, convert2id={convert2id}:\n{res} \n\n'
+    res = eval_generate(insts, tokenizer, language=lang, is_cut = is_cut, convert2id = convert2id, use_jieba=use_jieba)
+    res_str = f'{path} with lang={lang}, is_cut={is_cut}, convert2id={convert2id}, use_jieba={use_jieba}:\n{res} \n\n'
     print(res_str)
     with open('eval_res.txt', 'a+', encoding='utf-8') as f:
         f.write(res_str)

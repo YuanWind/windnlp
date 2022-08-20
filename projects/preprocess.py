@@ -20,18 +20,23 @@ def convert_data(data_dir, ori_dir):
     
     types = {'test':[], 'dev':[],'train':[]}
     for data_type in types:
+        # extracter抽取的json文件
         data1 =[json.loads(i) for i in open(f'{data_dir}/rrg_{data_type}.json','r',encoding='utf-8').readlines()]
         data2 = load_json(f'{data_dir}/{data_type}_source_transfered.json')
-        data3 =[i.strip().replace(' ', '') for i in open(f'{ori_dir}/{"valid" if data_type == "dev" else data_type}_target.txt').readlines()]
-        data4 =[i.strip().replace(' ', '') for i in open(f'{ori_dir}/{"valid" if data_type == "dev" else data_type}_source.txt').readlines()]
-        data4 = {s:i for i,s in enumerate(data4)}
         
+        # target.txt
+        data3 =[i.strip().replace(' ', '') for i in open(f'{ori_dir}/{"valid" if data_type == "dev" else data_type}_target.txt', 'r', encoding='utf-8').readlines()]
+        # source.txt
+        data4 =[i.strip().replace(' ', '') for i in open(f'{ori_dir}/{"valid" if data_type == "dev" else data_type}_source.txt', 'r', encoding='utf-8').readlines()]
+        # {src:idx}，所有的src句子
+        data4 = {s:i for i,s in enumerate(data4)}
+                
         idx = 0
         for batch in data1:
             for one1 in batch.values():
                 src1 = ''.join(data2[idx]["sentence"])
                 tgt_idx =  data4.get(src1,None)
-                if tgt_idx is None:
+                if tgt_idx is None: 
                     print(f'{src1}')
                     idx += 1
                     continue
@@ -63,25 +68,28 @@ def build_vocab(train_files, dev_files, test_files, vocab_file, aspect2tokens):
     print(f'Train num:{len(vocab.train_insts)}, dev num:{len(vocab.dev_insts)}, test num:{len(vocab.test_insts)}')
     dump_pkl(vocab, vocab_file)
     
-def align(src_path, tgt_path, json_path):
-    # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。并且把位置改为汉字
-    
+def align(src_path, tgt_path, property_path, json_path):
+    # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。并且把位置改为汉字,同时加入属性数据
+    # property.txt： key#val;
+    properties = [i.strip().replace(' ', '') for i in open(property_path, 'r', encoding='utf-8').readlines()]
+
     fixed_num = 0 
     src = open(src_path,'r', encoding='utf-8').readlines()
     tgt = open(tgt_path,'r', encoding='utf-8').readlines()
     res = load_json(json_path)
     idx0, idx1 = 0,0
-    for s,t in zip(src,tgt):
+    for s,t,p in zip(src,tgt,properties):
         s = s.strip().replace(' ', '')
         t = t.strip().replace(' ', '')
         if idx1<len(res) and res[idx1]['src'] == s: 
-            if res[idx1]['tgt'] != t:# 如果src相等但tgt不相等，则令后者等于前者，并置triples为空
+            if res[idx1]['tgt'] != t:# 如果src相等但tgt不相等，则令tgt相等，并置triples为空
                 res[idx1]['tgt'] = t
                 res[idx1]['triples'] = []
                 fixed_num += 1
+            res[idx1]['properties'] = p # 都相等则加入properties
             idx1 += 1
             continue
-        one = {'src':s,'tgt':t, 'triples':[]}
+        one = {'src':s,'tgt':t, 'triples':[], 'properties':p}
         res.insert(idx1, one)
         idx1 += 1
         fixed_num += 1
@@ -109,24 +117,27 @@ def align(src_path, tgt_path, json_path):
 
 def align_main():
     root_path = 'projects/data'
-    src_path, tgt_path, json_path = f'{root_path}/ori/valid_source.txt',\
+    src_path, tgt_path, json_path, property_path = f'{root_path}/ori/valid_source.txt',\
                                     f'{root_path}/ori/valid_target.txt',\
-                                    f'{root_path}/processed/dev.json'
-    align(src_path, tgt_path, json_path)
+                                    f'{root_path}/processed/dev.json',\
+                                    f'{root_path}/ori/valid_property.txt'
+    align(src_path, tgt_path, property_path, json_path)
     
-    src_path, tgt_path, json_path = f'{root_path}/ori/test_source.txt',\
+    src_path, tgt_path, json_path, property_path = f'{root_path}/ori/test_source.txt',\
                                     f'{root_path}/ori/test_target.txt',\
-                                    f'{root_path}/processed/test.json'
-    align(src_path, tgt_path, json_path)
+                                    f'{root_path}/processed/test.json',\
+                                    f'{root_path}/ori/test_property.txt'
+    align(src_path, tgt_path, property_path, json_path)
     
-    src_path, tgt_path, json_path = f'{root_path}/ori/train_source.txt',\
+    src_path, tgt_path, json_path, property_path = f'{root_path}/ori/train_source.txt',\
                                     f'{root_path}/ori/train_target.txt',\
-                                    f'{root_path}/processed/train.json'
-    align(src_path, tgt_path, json_path)
+                                    f'{root_path}/processed/train.json',\
+                                    f'{root_path}/ori/train_property.txt'
+    align(src_path, tgt_path, property_path, json_path)
     
 if __name__ == '__main__':
-    # convert_data('projects/data/processed', 'projects/data/ori')
-    # align_main()  # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。
+    convert_data('projects/data/processed', 'projects/data/ori')
+    align_main()  # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。
     train_files = ['projects/data/processed/train.json']
     dev_files = ['projects/data/processed/dev.json']
     test_files = ['projects/data/processed/test.json']
