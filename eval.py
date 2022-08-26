@@ -244,7 +244,7 @@ if __name__=='__main__':
     # split('projects/RRG/outs/daily_100/temp_dir/test_pred_bak.json', 'projects/RRG/outs/daily_100/temp_dir')
     # test()
     path = 'eval/res_s2s_valid copy.json'
-    path = 'projects/outs/ada_bart_19/temp_dir/dev_pred.json'
+    path = 'projects/outs/29/temp_dir/dev_pred.json'
     lang = 'zh'
     is_cut = False
     use_jieba = True

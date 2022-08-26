@@ -95,7 +95,7 @@ class RRGDataset(BaseDataset):
             'src_attention_mask': [],
             'tgt_attention_mask': [],
             'pi_attention_mask':[],
-            'bat_triple_idxs': []
+            'bat_triple_idxs':[]
         }
         src_text_max_len = config.max_seq_len
         for idx, inst in enumerate(insts):
@@ -103,30 +103,43 @@ class RRGDataset(BaseDataset):
             tgt_tokenized = tokenizer(inst['tgt'], add_special_tokens=True)
             pi_tokenized = tokenizer(inst['properties'], add_special_tokens=True)
             src_input_ids = [cls_id] + src_tokenized['input_ids'][:src_text_max_len] + [sep_id]
-            triples_sep_idxs = []
+            
             if config.add_triples:
+                
+                triples_sep_idxs = defaultdict(list)
                 for triple in inst['triples']:
-                    triples_sep_idxs.append([len(src_input_ids)-1])
+                    aspect_words = triple.split('__')[0]
+                    aspect = vocab.token2aspect.get(aspect_words,'[UNK]')
+                    triples_sep_idxs[aspect].append(len(src_input_ids)-1)
+                    triple = f'{aspect}__{triple}'
                     t_t = tokenizer(triple, add_special_tokens=False)
                     src_input_ids += t_t['input_ids'] + [sep_id]
                     if len(src_input_ids) > 512:
                         src_input_ids = src_input_ids[:512]
                         break
-            
+                triples_sep_idxs = list(triples_sep_idxs.values())
+                features['bat_triple_idxs'].append(triples_sep_idxs)
             src_attention_mask = [1] * len(src_input_ids)
-
             features['src_input_ids'].append(src_input_ids)
             features['tgt_input_ids'].append(tgt_tokenized['input_ids'])
             features['pi_input_ids'].append(pi_tokenized['input_ids'])
             features['src_attention_mask'].append(src_attention_mask)
             features['tgt_attention_mask'].append(tgt_tokenized['attention_mask'])
             features['pi_attention_mask'].append(pi_tokenized['attention_mask'])
-            features['bat_triple_idxs'].append(triples_sep_idxs)
             
         for k,v in features.items():
-            if k in ['bat_triple_idxs']: # 不需要进行padding的
-                continue
             _, new_v = batch_padding(v, padding='longest', padding_id=pad_id)
+            if k == 'bat_triple_idxs':
+                for idx in range(len(new_v)):
+                    tmp = []
+                    for i in new_v[idx]:
+                        if type(i) == int:
+                            tmp.append([i])
+                        else:
+                            tmp.append(i)
+                    new_v[idx] = tmp
+                features[k] = new_v
+                continue # 不用转成tensor类型
             features[k] = torch.tensor(new_v,dtype=torch.long)
 
         return features

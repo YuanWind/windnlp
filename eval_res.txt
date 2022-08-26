@@ -88,3 +88,6 @@ eval/res_s2s_valid copy.json with lang=zh, is_cut=False, convert2id=False, use_j
 projects/outs/only_eval/temp_dir/dev_pred.json with lang=zh, is_cut=False, convert2id=False, use_jieba=True:
 {'tgt-avg-len': 74.0484, 'pred-avg-len': 72.7188, 'Rouge-1': 23.91970397331138, 'Rouge-2': 6.204599457858227, 'Meteor': 16.787715804392136, 'Macro_BLEU': 2.384341000000002, 'Micro_BLEU_1': 28.49, 'Micro_BLEU_2': 13.07, 'Micro_BLEU_3': 6.43, 'Micro_BLEU_4': 3.64, 'Micro_BLEU': 12.9075, 'dist-1': 11.41, 'dist-2': 39.74, 'ref_dist-1': 16.78, 'ref_dist-2': 58.95} 
 
+projects/outs/29/temp_dir/dev_pred.json with lang=zh, is_cut=False, convert2id=False, use_jieba=True:
+{'tgt-avg-len': 74.0484, 'pred-avg-len': 59.457, 'Rouge-1': 23.552878984655027, 'Rouge-2': 5.804316997343753, 'Meteor': 15.377482314034586, 'Macro_BLEU': 2.037238000000006, 'Micro_BLEU_1': 24.96, 'Micro_BLEU_2': 11.24, 'Micro_BLEU_3': 5.38, 'Micro_BLEU_4': 2.89, 'Micro_BLEU': 11.117500000000001, 'dist-1': 7.89, 'dist-2': 29.54, 'ref_dist-1': 16.78, 'ref_dist-2': 58.95} 
+

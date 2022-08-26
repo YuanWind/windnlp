@@ -72,19 +72,21 @@ class AdaEvaluater:
             res = tokenizer.batch_decode(generate_ids, skip_special_tokens=True)
             for idx, inst in enumerate(insts):
                 triples = inst.pop('triples')
+                properties = inst.pop('properties')
                 if cls.config.language == 'zh':
                     inst['pred'] = res[idx].replace(' ', '')
                 else:
                     inst['pred'] = res[idx]
-                # 把triples放到最后。方便对比tgt和pred
+                # 把triples和properties放到最后。方便直观对比tgt和pred
                 inst['triples'] = triples 
+                inst['properties'] = properties
             cls.res.extend(insts)
         else:
             pass
         
         
    
-def eval_generate(insts, config,is_cut=False, convert2id=False):
+def eval_generate(insts, config,is_cut=False, convert2id=False, use_jieba=True):
     word2id = {'UNK':"0"}
     max_id_len = 1 
     res_dict = {}
@@ -92,11 +94,15 @@ def eval_generate(insts, config,is_cut=False, convert2id=False):
     if config.language == 'zh':
         import jieba
         rouge = Rouge()
-        
+        length_list = {'tgt':[],'pred':[]}
         for inst in insts:
             if not is_cut:
-                gold_words = jieba.cut(inst['tgt'])
-                infer_words = jieba.cut(inst['pred'])
+                if use_jieba:
+                    gold_words = list(jieba.cut(inst['tgt']))
+                    infer_words = list(jieba.cut(inst['pred']))
+                else:
+                    gold_words = list(inst['tgt'])
+                    infer_words = list(inst['pred'])
             else:
                 gold_words = inst['tgt'].split(' ')
                 infer_words = inst['pred'].split(' ')
@@ -122,9 +128,13 @@ def eval_generate(insts, config,is_cut=False, convert2id=False):
                    
             golden.append(' '.join(gold_words))
             infer.append(' '.join(infer_words))
-        
+            length_list['tgt'].append(len(gold_words))
+            length_list['pred'].append(len(infer_words))
         # print(r_s1)
         # clothing 数据集还要计算Rouge1、Rouge2、RougeL和METEOR
+        res_dict[f"tgt-avg-len"] = sum(length_list['tgt'])/len(length_list['tgt'])
+        res_dict[f"pred-avg-len"] = sum(length_list['pred'])/len(length_list['pred'])
+        
         r_s = rouge.get_scores(infer, golden, avg=True, ignore_empty=True)
         # print(r_s)
         res_dict[f"Rouge-1"] = r_s['rouge-1']['r'] * 100

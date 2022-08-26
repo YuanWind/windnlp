@@ -8,9 +8,10 @@
 from collections import Counter, defaultdict
 import json
 import logging
+from tqdm import tqdm
 logger = logging.getLogger(__name__.replace('_', ''))
 from scripts.utils import load_json, load_pkl, set_to_orderedlist
-from  functools  import  wraps 
+import jieba
 
 def add_labels(label_names=[]):
     """装饰器，为类动态加入 {label_name}2id 和 id2{label_name} 属性。
@@ -92,14 +93,28 @@ class RRGVocab(BaseVocab):
     def __init__(self, names = ['labels', 'aspect', 'sentiment']):
         super().__init__(names)
         self.token2aspect = {}
+        self.new_tokens = set()
         
-    def build(self, aspect2tokens):
+    def build(self, aspect2tokens, build_new_vocabs=False):
         aspect_set = set(aspect2tokens.keys())
         self.set_labels('aspect', aspect_set)
         self.set_labels('sentiment', {'正向','负向','中性'})
         for k, vs in aspect2tokens.items():
             for v in vs:
-                self.token2aspect[v] = k    
+                self.token2aspect[v] = k  
+        # 构建新的词表
+        if build_new_vocabs:
+            self.new_tokens.update({'正向','负向','中性'})
+            
+            words_counter = Counter()
+            for inst in tqdm(self.all_insts):
+                words = list(jieba.cut(inst['src']))+\
+                        list(jieba.cut(inst['tgt']))+\
+                        list(jieba.cut(' '.join(inst['triples'])))+\
+                        list(jieba.cut(inst['properties']))
+                words_counter.update(Counter(words))
+            self.new_tokens.update([i[0] for i in words_counter.most_common(15000)])
+            print(f'length of new_tokens: {len(self.new_tokens)}')
 
 @add_labels(['labels', 'aspect', 'sentiment'])
 class RRGVocab1(BaseVocab):

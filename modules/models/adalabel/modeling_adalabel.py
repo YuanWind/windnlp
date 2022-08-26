@@ -5,6 +5,7 @@ from modules.models.adalabel.configuration_adalabel import AdaLabelConfig
 from transformers.utils.generic import ModelOutput
 
 from scripts.utils import get_tensor_device
+
 class TransformerBiDecoder(BartDecoder):
     def __init__(self, config: BartConfig, embed_tokens: Optional[nn.Embedding] = None) -> None:
         super().__init__(config, embed_tokens)
@@ -65,7 +66,10 @@ class RRGBartModel(BartModel):
             config (BartConfig): _description_
         """
         super().__init__(config)
-        
+        if not config.share_encoder_for_pi:
+            self.pi_encoder = BartEncoder(config, self.shared)
+        else:
+            self.pi_encoder = self.encoder
         # self.generate()
         
     def forward(self, input_ids: torch.LongTensor = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[List[torch.FloatTensor]] = None, past_key_values: Optional[List[torch.FloatTensor]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None, pi_input_ids = None, pi_attention_mask = None) -> Union[Tuple, Seq2SeqModelOutput]:
@@ -100,10 +104,10 @@ class RRGBartModel(BartModel):
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict,
             )
-            
+        # 编码产品属性信息，共享encoder
         pi_encoder_outputs = None
         if pi_input_ids is not None:
-            pi_encoder_outputs = self.encoder(
+            pi_encoder_outputs = self.pi_encoder(
                 input_ids=pi_input_ids,
                 attention_mask=pi_attention_mask,
                 head_mask=head_mask,
@@ -144,6 +148,7 @@ class RRGBartModel(BartModel):
         if not return_dict:
             return decoder_outputs + encoder_outputs
 
+        
         return Seq2SeqModelOutput(
             last_hidden_state=decoder_outputs.last_hidden_state,
             # past_key_values=decoder_outputs.past_key_values,
@@ -155,7 +160,6 @@ class RRGBartModel(BartModel):
             # encoder_attentions=encoder_outputs.attentions,
         )
 
-
 class RRGBartForConditionalGeneration(BartForConditionalGeneration):
     def __init__(self, config: BartConfig) -> None:
         """把model改成RRGBart
@@ -165,6 +169,8 @@ class RRGBartForConditionalGeneration(BartForConditionalGeneration):
         """
         super().__init__(config)
         self.model = RRGBartModel(config)
+        self.cp_head = nn.Linear(config.d_model,config.d_model)
+        self.post_init()
         
     def forward(self, input_ids: torch.LongTensor = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[List[torch.FloatTensor]] = None, past_key_values: Optional[List[torch.FloatTensor]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, labels: Optional[torch.LongTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None, pi_input_ids = None, pi_attention_mask = None) -> Union[Tuple, Seq2SeqLMOutput]:
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
@@ -196,8 +202,23 @@ class RRGBartForConditionalGeneration(BartForConditionalGeneration):
             return_dict=return_dict,
             pi_input_ids = pi_input_ids, pi_attention_mask = pi_attention_mask
         )
+        # [bs, tgt_seq_len, vocab_size]
         lm_logits = self.lm_head(outputs[0]) + self.final_logits_bias
-
+        if self.config.use_copy_mechanism:
+        # 计算copy 机制logits
+            if pi_input_ids is not None:
+                # src_attention_mask = torch.cat([attention_mask,pi_attention_mask],dim=1)
+                src_ids = torch.cat([input_ids,pi_input_ids],dim=1)
+            else:
+                # src_attention_mask = attention_mask
+                src_ids = input_ids
+                            # [bs,src_seq_len,d_model] * [bs,d_model, tgt_seq_len] --> [bs,tgt_seq_len,src_seq_len]
+            cp_outs = torch.bmm(torch.tanh(self.cp_head(outputs[1])),(outputs[0].transpose(1,2))).transpose(1,2)
+            # outputs:[bs, src_seq_len, hidden_dim] --> [bs, tgt_seq_len, vocab_size]
+            expanded_src_ids = src_ids[:, None, :].expand(src_ids.shape[0], lm_logits.shape[1], src_ids.shape[1])
+            cp_src_logits = torch.zeros_like(lm_logits,dtype=cp_outs.dtype).scatter_(2, expanded_src_ids , cp_outs)
+            
+            lm_logits = lm_logits+cp_src_logits
         masked_lm_loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss()
@@ -219,6 +240,88 @@ class RRGBartForConditionalGeneration(BartForConditionalGeneration):
             encoder_attentions=outputs.encoder_attentions,
         )
 
+    
+    def get_pi_encoder(self):
+        return self.model.pi_encoder
+    
+    def _prepare_encoder_decoder_kwargs_for_generation(
+        self, inputs_tensor: torch.Tensor, model_kwargs, model_input_name: Optional[str] = None
+    ):
+        # 1. get encoder
+        encoder = self.get_encoder()
+        pi_encoder = self.get_pi_encoder()
+        # 2. prepare encoder args and encoder kwargs from model kwargs
+        irrelevant_prefix = ["decoder_", "cross_attn", "use_cache"]
+        encoder_kwargs = {
+            argument: value
+            for argument, value in model_kwargs.items()
+            if not any(argument.startswith(p) for p in irrelevant_prefix)
+        }
+
+        # 3. make sure that encoder returns `ModelOutput`
+        model_input_name = model_input_name if model_input_name is not None else self.main_input_name
+        encoder_kwargs["return_dict"] = True
+        encoder_kwargs[model_input_name] = inputs_tensor
+        bat_triple_idxs = encoder_kwargs.pop('bat_triple_idxs', None)
+        pi_input_ids = encoder_kwargs.pop('pi_input_ids', None)
+        pi_attention_mask = encoder_kwargs.pop('pi_attention_mask', None)
+        encoder_outputs = encoder(**encoder_kwargs)
+        
+        if pi_input_ids is not None:
+            pi_encoder_outputs = pi_encoder(
+                input_ids=pi_input_ids,
+                attention_mask=pi_attention_mask,
+                return_dict=encoder_kwargs["return_dict"],
+            )        
+        if pi_input_ids is not None:
+            hidden_states = torch.cat([encoder_outputs[0], pi_encoder_outputs[0]],dim=1)
+            enc_attention_mask = torch.cat([encoder_kwargs['attention_mask'],pi_attention_mask],dim=1)
+            src_ids = torch.cat([inputs_tensor,pi_input_ids],dim=1)
+        else:
+            hidden_states = encoder_outputs[0]
+            enc_attention_mask = encoder_kwargs['attention_mask']
+            src_ids = inputs_tensor
+            
+        encoder_outputs['last_hidden_state'] = hidden_states
+        model_kwargs["encoder_outputs"]: ModelOutput = encoder_outputs
+        model_kwargs['enc_input_ids'] = src_ids
+        model_kwargs['enc_attention_mask'] = enc_attention_mask
+        model_kwargs['src_len'] = inputs_tensor.shape[1]
+        model_kwargs['bat_triple_idxs'] = bat_triple_idxs
+        return model_kwargs
+    
+    def prepare_inputs_for_generation(
+        self,
+        decoder_input_ids,
+        past=None,
+        attention_mask=None,
+        head_mask=None,
+        decoder_head_mask=None,
+        cross_attn_head_mask=None,
+        use_cache=None,
+        encoder_outputs=None,
+        **kwargs
+    ):
+        # cut decoder_input_ids if past is used
+        if past is not None:
+            decoder_input_ids = decoder_input_ids[:, -1:]
+
+        input_arguments = {
+            "input_ids": kwargs.pop('enc_input_ids',None),  # encoder_outputs is defined. input_ids not needed
+            "encoder_outputs": encoder_outputs,
+            "past_key_values": past,
+            "decoder_input_ids": decoder_input_ids,
+            "attention_mask": kwargs.pop('enc_attention_mask',None),
+            "head_mask": head_mask,
+            "decoder_head_mask": decoder_head_mask,
+            "cross_attn_head_mask": cross_attn_head_mask,
+            "use_cache": use_cache,  # change this to avoid caching (presumably for debugging)
+            "src_len":kwargs.pop('src_len',None),
+            'bat_triple_idxs':kwargs.pop('bat_triple_idxs',None)
+        }
+
+        return input_arguments
+    
 class AdaLabelModel(RRGBartModel):
     def __init__(self, config: BartConfig):
         
@@ -269,9 +372,7 @@ class AdaLabelModel(RRGBartModel):
                 seq2SeqModelOutput.cross_attentions,
                 bidecoder_outputs.last_hidden_state, 
                 bidecoder_outputs.cross_attentions)
-
-        
-    
+  
 class AdaLabel_BartForConditionalGeneration(RRGBartForConditionalGeneration):
     def __init__(self, config: AdaLabelConfig) -> None:
         super().__init__(config)
@@ -330,35 +431,41 @@ def KL_divergence(prior_mu, prior_logvar, post_mu, post_logvar, loss_mask=None):
 class PHV_BartForConditionalGeneration(AdaLabel_BartForConditionalGeneration):
     def __init__(self, config: AdaLabelConfig):
         super().__init__(config)
-        self.gru = nn.GRU(input_size=2*config.d_model, hidden_size=config.d_model)
+        self.state_linear = nn.Linear(self.config.d_model*2, self.config.d_model)
+        self.gru = nn.GRU(input_size=config.d_model, hidden_size=config.d_model,batch_first = True, num_layers=1)
         self.post_linear1 = nn.Linear(self.config.d_model*3, self.config.d_model*2)
         self.post_linear2 = nn.Linear(self.config.d_model*2, self.config.d_model*2)
         self.prior_linear1 = nn.Linear(self.config.d_model*2, self.config.d_model*2)
         self.prior_linear2 = nn.Linear(self.config.d_model*2, self.config.d_model*2)
+        self.begin_ids = config.begin_ids
+        self.end_ids = config.end_ids
+        self.post_init()
         
-    def forward(self, input_ids: torch.LongTensor = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[List[torch.FloatTensor]] = None, past_key_values: Optional[List[torch.FloatTensor]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, labels: Optional[torch.LongTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None, pi_input_ids = None, pi_attention_mask = None, bat_triple_idxs = None) -> Union[Tuple, Seq2SeqLMOutput]:
-        
-        src_encoder_outputs = self.model.encoder(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
-        tgt_encoder_outputs = self.model.encoder(
-            input_ids=decoder_input_ids,
-            attention_mask=decoder_attention_mask,
-            head_mask=head_mask,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict,
-        )
-        
+    def forward(self, input_ids: torch.LongTensor = None, attention_mask: Optional[torch.Tensor] = None, decoder_input_ids: Optional[torch.LongTensor] = None, decoder_attention_mask: Optional[torch.LongTensor] = None, head_mask: Optional[torch.Tensor] = None, decoder_head_mask: Optional[torch.Tensor] = None, cross_attn_head_mask: Optional[torch.Tensor] = None, encoder_outputs: Optional[List[torch.FloatTensor]] = None, past_key_values: Optional[List[torch.FloatTensor]] = None, inputs_embeds: Optional[torch.FloatTensor] = None, decoder_inputs_embeds: Optional[torch.FloatTensor] = None, labels: Optional[torch.LongTensor] = None, use_cache: Optional[bool] = None, output_attentions: Optional[bool] = None, output_hidden_states: Optional[bool] = None, return_dict: Optional[bool] = None, pi_input_ids = None, pi_attention_mask = None, bat_triple_idxs = None, **kwargs) -> Union[Tuple, Seq2SeqLMOutput]:
+        if encoder_outputs is None:
+            src_encoder_outputs = self.model.encoder(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                head_mask=head_mask,
+                inputs_embeds=inputs_embeds,
+                output_attentions=output_attentions,
+                output_hidden_states=output_hidden_states,
+                return_dict=return_dict,
+            )
+            tgt_encoder_outputs = self.model.encoder(
+                input_ids=decoder_input_ids,
+                attention_mask=decoder_attention_mask,
+                head_mask=head_mask,
+                output_attentions=output_attentions,
+                output_hidden_states=output_hidden_states,
+                return_dict=return_dict,
+            )
+        else:
+            src_encoder_outputs = encoder_outputs
+            tgt_encoder_outputs = None
         pi_encoder_outputs = None
         if pi_input_ids is not None:
-            pi_encoder_outputs = self.encoder(
+            pi_encoder_outputs = self.model.encoder(
                 input_ids=pi_input_ids,
                 attention_mask=pi_attention_mask,
                 head_mask=head_mask,
@@ -367,28 +474,29 @@ class PHV_BartForConditionalGeneration(AdaLabel_BartForConditionalGeneration):
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict,
             )
+        src_len = kwargs.pop('src_len', None)
         
-        
-        
-        # 采样计算隐变量和KL散度
-        kl_loss, global_z = self.do_sample(src_encoder_outputs, pi_encoder_outputs, tgt_encoder_outputs)
+        # 采样计算隐变量和batch平均KL散度
+        kl_loss, global_z = self.do_sample(src_encoder_outputs, pi_encoder_outputs, tgt_encoder_outputs, src_len)
         # 分组过GRU
-        self.do_group()
+        gru_group_states, group_mask = self.do_group(bat_triple_idxs, src_encoder_outputs, pi_encoder_outputs, tgt_encoder_outputs, global_z)
         
         # 拼接GRU输出、src_encoder_outputs[0]、pi_encoder_outputs[0]
-        hidden_states = None # [bs, group_num, hidden_size]
         if pi_encoder_outputs is not None:
             enc_hidden_states = torch.cat([src_encoder_outputs[0], pi_encoder_outputs[0]],dim=1)
             enc_attention_mask = torch.cat([attention_mask,pi_attention_mask],dim=1)
         else:
             enc_hidden_states = encoder_outputs[0]
             enc_attention_mask = attention_mask
-            
+        
+        new_enc_hidden_states = torch.cat([enc_hidden_states, gru_group_states],dim=1)
+        new_enc_attention_mask = torch.cat([enc_attention_mask,group_mask],dim=1)
+        
         decoder_outputs = self.model.decoder(
             input_ids=decoder_input_ids,
             attention_mask=decoder_attention_mask,
-            encoder_hidden_states=hidden_states, # 作为decoder的输入
-            encoder_attention_mask=enc_attention_mask,
+            encoder_hidden_states=new_enc_hidden_states, # 作为decoder的输入
+            encoder_attention_mask=new_enc_attention_mask,
             head_mask=decoder_head_mask,
             cross_attn_head_mask=cross_attn_head_mask,
             past_key_values=past_key_values,
@@ -400,12 +508,27 @@ class PHV_BartForConditionalGeneration(AdaLabel_BartForConditionalGeneration):
         )
         
         lm_logits = self.lm_head(decoder_outputs[0]) + self.final_logits_bias
+        
+        if self.config.use_copy_mechanism:
+        # 计算copy 机制logits
+            if pi_input_ids is not None:
+                src_ids = torch.cat([input_ids,pi_input_ids],dim=1)
+            else:
+                src_ids = input_ids
+                            # [bs,src_seq_len,d_model] * [bs,d_model, tgt_seq_len] --> [bs,tgt_seq_len,src_seq_len]
+            cp_outs = torch.bmm(torch.tanh(self.cp_head(enc_hidden_states)),(decoder_outputs[0].transpose(1,2))).transpose(1,2)
+            # outputs:[bs, src_seq_len, hidden_dim] --> [bs, tgt_seq_len, vocab_size]
+            expanded_src_ids = src_ids[:, None, :].expand(src_ids.shape[0], lm_logits.shape[1], src_ids.shape[1])
+            cp_src_logits = torch.zeros_like(lm_logits,dtype=cp_outs.dtype).scatter_(2, expanded_src_ids , cp_outs)
+            
+            lm_logits = lm_logits+cp_src_logits
+        
         generate1 = lm_logits
     
         bidec_outs = self.bidecoder(
             input_ids=decoder_input_ids,
             attention_mask=decoder_attention_mask,
-            encoder_hidden_states=hidden_states,
+            encoder_hidden_states=enc_hidden_states,
             encoder_attention_mask=enc_attention_mask,
             head_mask=decoder_head_mask,
             cross_attn_head_mask=cross_attn_head_mask,
@@ -417,53 +540,83 @@ class PHV_BartForConditionalGeneration(AdaLabel_BartForConditionalGeneration):
             return_dict=return_dict,
         )
         generate2 = self.bidecoder_generator(bidec_outs.last_hidden_state)
-        
-        
+
         dict_outs = {
             'logits':generate1,
             'generate2': generate2,
-            'kl_loss':None
+            'kl_loss':kl_loss
         }
         
         return ModelOutput(**dict_outs)
-    def do_sample(self, src_encoder_outputs, pi_encoder_outputs, tgt_encoder_outputs):
+    def do_sample(self, src_encoder_outputs, pi_encoder_outputs, tgt_encoder_outputs,src_len=None):
         # 进行先验概率、后验概率、KL散度、隐变量的计算以及高斯分布采样
         src_cls_states = src_encoder_outputs[0][:,0,:] # [bs, d_model]
-        pi_cls_states = pi_encoder_outputs[0][:,0,:]
-        tgt_cls_states = tgt_encoder_outputs[0][:,0,:]
-        post_inp = torch.cat((src_cls_states, pi_cls_states, tgt_cls_states), 1)
-        prior_inp = torch.cat((src_cls_states, pi_cls_states), 1)
-        post_mu , post_logvar = torch.split(self.post_linear2(F.tanh(self.post_linear1(post_inp))),self.config.d_model,1)
+        if pi_encoder_outputs is not None:
+            pi_cls_states = pi_encoder_outputs[0][:,0,:]
+        else:
+            pi_cls_states = src_encoder_outputs[0][:,src_len,:]
         
-        prior_mu , prior_logvar = torch.split(self.post_linear2(F.tanh(self.post_linear1(prior_inp))),self.config.d_model,1)
+        
         if self.training:# 训练阶段使用后验概率
+            tgt_cls_states = tgt_encoder_outputs[0][:,0,:]
+            post_inp = torch.cat((src_cls_states, pi_cls_states, tgt_cls_states), 1)
+            post_mu , post_logvar = torch.split(self.post_linear2(F.tanh(self.post_linear1(post_inp))),self.config.d_model,1)
+            prior_inp = torch.cat((src_cls_states, pi_cls_states), 1)
+            prior_mu , prior_logvar = torch.split(self.prior_linear2(F.tanh(self.prior_linear1(prior_inp))),self.config.d_model,1)
             global_z = sample_gaussian(post_mu.shape, post_mu , post_logvar)
+            kl_div = KL_divergence(prior_mu, prior_logvar, post_mu, post_logvar)
+            kl_div = kl_div/prior_mu.shape[0] # 平均kl散度
         else:# 推理阶段使用先验概率
+            prior_inp = torch.cat((src_cls_states, pi_cls_states), 1)
+            prior_mu , prior_logvar = torch.split(self.prior_linear2(F.tanh(self.prior_linear1(prior_inp))),self.config.d_model,1)
             global_z = sample_gaussian(prior_mu.shape, prior_mu , prior_logvar)
-            
-        kl_div = KL_divergence(prior_mu, prior_logvar, post_mu, post_logvar)
+            kl_div = 0
+        
         return kl_div, global_z
 
         
     def do_group(self, bat_triple_idxs, src_encoder_outputs, pi_encoder_outputs, tgt_encoder_outputs, global_z):
+        # global_z用于初始化gru，然后group循环过gru
         src_last_states = src_encoder_outputs[0]
         src_cls_states = src_encoder_outputs[0][:,0,:]
-        pi_cls_states = pi_encoder_outputs[0][:,0,:]
-        tgt_cls_states = tgt_encoder_outputs[0][:,0,:]
-        triples_states = [] # 最终要形成 [bs, group_num, hidden_size]
+        # pi_cls_states = pi_encoder_outputs[0][:,0,:]
+        # tgt_cls_states = tgt_encoder_outputs[0][:,0,:]
+        triples_states = [] # 最终要形成 [bs, group_num+2, hidden_size]
         
-        # TODO：加入begin和end的group，以及取各组的SEP
+        device = get_tensor_device(src_last_states)
+        real_group_num = []
+        # TODO：是否需要加上mask
         for bs_idx, groups in enumerate(bat_triple_idxs):
+            tmp = [self.model.shared(torch.tensor(self.begin_ids,device=device))]
+            num = 1
             for sep_idxs in groups:
-                t_idxs = torch.tensor(sep_idxs)
-                mean_pool_res = torch.mean(
-                    torch.index_select(src_last_states[bs_idx], 0, t_idxs), # [d_model]
-                    dim = 0
-                ) # [1, hidden_size]
-                triples_states.append(mean_pool_res)
+                if sep_idxs!=[0]:
+                    t_idxs = torch.tensor(sep_idxs,device=device)
+                    mean_pool_res = torch.mean(
+                        torch.index_select(src_last_states[bs_idx], 0, t_idxs), # [d_model]
+                        dim = 0
+                    ) # [1, hidden_size]
+                    num+=1
+                else:
+                    mean_pool_res = torch.zeros_like(tmp[0])
+                tmp.append(mean_pool_res)
+            tmp.insert(num,self.model.shared(torch.tensor(self.end_ids,device=device)))
+            num+=1
+            tmp = torch.stack(tmp, dim=0)
+            triples_states.append(tmp)
+            real_group_num.append(num)
+        real_group_num = torch.tensor(real_group_num)
         triples_states = torch.stack(triples_states, dim=0)
-        init_state = torch.cat([src_cls_states, ], )
-
+        init_state = torch.cat([src_cls_states, global_z], dim=-1)
+        init_state = self.state_linear(init_state).unsqueeze(0)
+        inps_packed = nn.utils.rnn.pack_padded_sequence(triples_states, real_group_num, batch_first=True, enforce_sorted=False)
+        packed_group_states, states = self.gru(inps_packed, init_state)
+        gru_group_states, _ = nn.utils.rnn.pad_packed_sequence(packed_group_states,batch_first=True)
+        group_mask = torch.zeros((gru_group_states.shape[0],gru_group_states.shape[1]),device=device)
+        for idx in range(real_group_num.shape[0]):
+            l = real_group_num[idx]
+            group_mask[idx,:l] = 1
+        return gru_group_states, group_mask
     def no_group(self, bat_triple_idxs, src_encoder_outputs, tgt_encoder_outputs):
         src_last_states = src_encoder_outputs[0] # [bs, seq_len, hidden_size]
         tgt_last_states = tgt_encoder_outputs[0] # [bs, seq_len, hidden_size]
@@ -573,6 +726,7 @@ class AdaLabelForConditionalGeneration(BartPretrainedModel):
             "cross_attn_head_mask": cross_attn_head_mask,
             "use_cache": use_cache,  # change this to avoid caching (presumably for debugging)
         }
+
 class AdaLabLoss(nn.Module):
     """
     With adaptive label smoothing,

@@ -25,7 +25,8 @@ def build_model(kwargs=None):
                 
     model = RRGModel(config, Evaluater)
     
-    # model.load_state_dict(torch.load('projects/RRG/outs/ori_bart1/checkpoint-30800/pytorch_model.bin'))
+    # model.bart.resize_token_embeddings(len(Evaluater.tokenizer)) 
+    # logger.info(f'resize model token nums to {len(Evaluater.tokenizer)}')
     return model
 
 def build_data(config, test_insts = None, train_insts=None, dev_insts=None):
@@ -62,10 +63,15 @@ def build_data(config, test_insts = None, train_insts=None, dev_insts=None):
         tokenizer = BertTokenizer.from_pretrained(config.pretrained_model_name_or_path)
     else:
         tokenizer = AutoTokenizer.from_pretrained(config.pretrained_model_name_or_path)
+    # 使用新的tokens效果不好
+    # num_add_tokens = tokenizer.add_tokens(list(vocab.new_tokens))
+    # logger.info(f'Tokenizer add {num_add_tokens} new tokens.')
     config.set('vocab_size', tokenizer.vocab_size)
     config.set('pad_token_id', tokenizer.pad_token_id)
     config.set('bos_token_id', tokenizer.bos_token_id if tokenizer.bos_token_id is not None else tokenizer.cls_token_id)
     config.set('eos_token_id', tokenizer.eos_token_id if tokenizer.eos_token_id is not None else tokenizer.sep_token_id)
+    config.set('begin_ids', tokenizer.vocab.get('[unused80]')) # 作为group的begin
+    config.set('end_ids', tokenizer.vocab.get('[unused81]')) # 作为group的end
     train_set = RRGDataset(config, vocab.train_insts, tokenizer, vocab, data_type='train', convert_here=not config.convert_features_in_run_time)
     dev_set = RRGDataset(config, vocab.dev_insts, tokenizer, vocab, data_type='dev', convert_here=not config.convert_features_in_run_time)
     test_set = RRGDataset(config, vocab.test_insts, tokenizer, vocab, data_type='test', convert_here=not config.convert_features_in_run_time)

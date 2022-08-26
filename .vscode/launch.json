@@ -5,7 +5,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Python: 当前文件",
+			"name": "当前文件",
 			"type": "python",
 			"request": "launch",
 			"program": "${file}",
@@ -13,7 +13,7 @@
 			"justMyCode": false
 		},
 		{
-			"name": "Python: main",
+			"name": "main",
 			"type": "python",
 			"request": "launch",
 			"program": "projects/main.py",
@@ -24,7 +24,7 @@
 			"justMyCode": false
 		},
 		{
-			"name": "Python: exampley.py",
+			"name": "exampley.py",
 			"type": "python",
 			"request": "launch",
 			"program": "exampley.py",
@@ -42,7 +42,7 @@
 			"justMyCode": false
 		},
 		{
-			"name": "Python: main-chinese",
+			"name": "main-chinese",
 			"type": "python",
 			"request": "launch",
 			"program": "projects/main.py",
@@ -52,6 +52,17 @@
 			],
 			"console": "integratedTerminal",
 			"justMyCode": false
+		},
+		{
+			"name": "main-chinese-eval",
+			"type": "python",
+			"request": "launch",
+			"program": "projects/main.py",
+			"args": [
+				"--config_file", "projects/outs/34/main_chinese.cfg",
+			],
+			"console": "integratedTerminal",
+			"justMyCode": true
 		}
 	]
 }

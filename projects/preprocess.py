@@ -28,6 +28,7 @@ def convert_data(data_dir, ori_dir):
         data3 =[i.strip().replace(' ', '') for i in open(f'{ori_dir}/{"valid" if data_type == "dev" else data_type}_target.txt', 'r', encoding='utf-8').readlines()]
         # source.txt
         data4 =[i.strip().replace(' ', '') for i in open(f'{ori_dir}/{"valid" if data_type == "dev" else data_type}_source.txt', 'r', encoding='utf-8').readlines()]
+        
         # {src:idx}，所有的src句子
         data4 = {s:i for i,s in enumerate(data4)}
                 
@@ -68,17 +69,17 @@ def build_vocab(train_files, dev_files, test_files, vocab_file, aspect2tokens):
     print(f'Train num:{len(vocab.train_insts)}, dev num:{len(vocab.dev_insts)}, test num:{len(vocab.test_insts)}')
     dump_pkl(vocab, vocab_file)
     
-def align(src_path, tgt_path, property_path, json_path):
+def align(src_path, tgt_path, property_path, shops_path, json_path):
     # 对齐转换后的数据与原数据，因为转换后的数据可能丢失一些源数据。并且把位置改为汉字,同时加入属性数据
     # property.txt： key#val;
     properties = [i.strip().replace(' ', '') for i in open(property_path, 'r', encoding='utf-8').readlines()]
-
+    shops = [i.strip().replace(' ', '') for i in open(shops_path, 'r', encoding='utf-8').readlines()]
     fixed_num = 0 
     src = open(src_path,'r', encoding='utf-8').readlines()
     tgt = open(tgt_path,'r', encoding='utf-8').readlines()
     res = load_json(json_path)
     idx0, idx1 = 0,0
-    for s,t,p in zip(src,tgt,properties):
+    for s,t,p,shop in zip(src,tgt,properties,shops):
         s = s.strip().replace(' ', '')
         t = t.strip().replace(' ', '')
         if idx1<len(res) and res[idx1]['src'] == s: 
@@ -86,6 +87,7 @@ def align(src_path, tgt_path, property_path, json_path):
                 res[idx1]['tgt'] = t
                 res[idx1]['triples'] = []
                 fixed_num += 1
+            p = p + f';店名#{shop}'
             res[idx1]['properties'] = p # 都相等则加入properties
             idx1 += 1
             continue
@@ -117,23 +119,26 @@ def align(src_path, tgt_path, property_path, json_path):
 
 def align_main():
     root_path = 'projects/data'
-    src_path, tgt_path, json_path, property_path = f'{root_path}/ori/valid_source.txt',\
+    src_path, tgt_path, json_path, property_path, shops_path = f'{root_path}/ori/valid_source.txt',\
                                     f'{root_path}/ori/valid_target.txt',\
                                     f'{root_path}/processed/dev.json',\
-                                    f'{root_path}/ori/valid_property.txt'
-    align(src_path, tgt_path, property_path, json_path)
+                                    f'{root_path}/ori/valid_property.txt',\
+                                    f'{root_path}/ori/valid_shops.txt'
+    align(src_path, tgt_path, property_path, shops_path, json_path)
     
-    src_path, tgt_path, json_path, property_path = f'{root_path}/ori/test_source.txt',\
+    src_path, tgt_path, json_path, property_path, shops_path = f'{root_path}/ori/test_source.txt',\
                                     f'{root_path}/ori/test_target.txt',\
                                     f'{root_path}/processed/test.json',\
-                                    f'{root_path}/ori/test_property.txt'
-    align(src_path, tgt_path, property_path, json_path)
+                                    f'{root_path}/ori/test_property.txt',\
+                                    f'{root_path}/ori/test_shops.txt'
+    align(src_path, tgt_path, property_path, shops_path, json_path)
     
-    src_path, tgt_path, json_path, property_path = f'{root_path}/ori/train_source.txt',\
+    src_path, tgt_path, json_path, property_path, shops_path = f'{root_path}/ori/train_source.txt',\
                                     f'{root_path}/ori/train_target.txt',\
                                     f'{root_path}/processed/train.json',\
-                                    f'{root_path}/ori/train_property.txt'
-    align(src_path, tgt_path, property_path, json_path)
+                                    f'{root_path}/ori/train_property.txt',\
+                                    f'{root_path}/ori/train_shops.txt'
+    align(src_path, tgt_path, property_path, shops_path, json_path)
     
 if __name__ == '__main__':
     convert_data('projects/data/processed', 'projects/data/ori')

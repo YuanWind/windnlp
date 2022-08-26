@@ -33,9 +33,13 @@ class RRGModel(BaseModel):
         self.evaluater = evaluater
         # 模型
         if config.model_type == 'ori_ada':
-            self.adalabel_config = AdaLabelConfig(vocab_size = config.vocab_size, dropout = config.dropout, attention_dropout=config.attn_dropout, 
+            self.adalabel_config = AdaLabelConfig(vocab_size = config.vocab_size, dropout = config.dropout,             attention_dropout=config.attn_dropout, 
                                                   pad_token_id=config.pad_token_id, bos_token_id=config.bos_token_id,
                                                   eos_token_id=config.eos_token_id, decoder_start_token_id=config.eos_token_id)
+            self.adalabel_config.use_copy_mechanism = config.use_copy_mechanism
+            self.adalabel_config.begin_ids=config.begin_ids
+            self.adalabel_config.end_ids=config.end_ids
+            self.adalabel_config.share_encoder_for_pi = config.share_encoder_for_pi
             self.bart = AdaLabelForConditionalGeneration(self.adalabel_config)
         else:
             self.adalabel_config = MODEL_MAPPING[config.model_type][0].from_pretrained(config.pretrained_model_name_or_path,
@@ -43,6 +47,10 @@ class RRGModel(BaseModel):
                                                                             dropout = config.dropout, attention_dropout=config.attn_dropout,    
                                                                             pad_token_id=config.pad_token_id, bos_token_id=config.bos_token_id,
                                                                             eos_token_id=config.eos_token_id, decoder_start_token_id=config.eos_token_id)
+            self.adalabel_config.use_copy_mechanism = config.use_copy_mechanism
+            self.adalabel_config.begin_ids=config.begin_ids
+            self.adalabel_config.end_ids=config.end_ids
+            self.adalabel_config.share_encoder_for_pi = config.share_encoder_for_pi
             self.bart = MODEL_MAPPING[config.model_type][1].from_pretrained(config.pretrained_model_name_or_path, 
                                                                      config = self.adalabel_config)
         
@@ -50,13 +58,27 @@ class RRGModel(BaseModel):
         self.criterion = AdaLabLoss(self.adalabel_config.vocab_size, config.per_device_train_batch_size,
                                     ignore_index=config.pad_token_id, temperature=config.ada_temp, eos_index=config.eos_token_id)
     
-
+        if not config.share_encoder_for_pi:
+            # PI不共享encoder的话，使得初始化模型参数的值相同。
+            state1 = self.bart.model.pi_encoder.state_dict() 
+            state2 = self.bart.model.encoder.state_dict()
+            for k,v in state2.items():
+                state1[k].data = v.data
+                
     def optimizer_grouped_parameters(self, weight_decay):
         """为模型参数设置不同的优化器超参，比如分层学习率等，此处默认为hf的初始化方式
         """
-        decay_parameters = get_parameter_names(self, [nn.LayerNorm])
-        decay_parameters = [name for name in decay_parameters if "bias" not in name]
-        another_lr_parameters = [name for name in decay_parameters if "bart" not in name]
+        total_parameters = get_parameter_names(self, [nn.LayerNorm])
+        decay_parameters = [name for name in total_parameters if "bias" not in name]
+        another_lr_parameters = []
+        for name in total_parameters:
+            if 'bart' not in name:
+                another_lr_parameters.append(name)
+            elif 'embed' in name:
+                another_lr_parameters.append(name)
+            elif 'biencoder' in name:
+                another_lr_parameters.append(name)
+        
         optimizer_grouped_parameters = [
             {
                 "params": [p for n, p in self.named_parameters() if n in decay_parameters and n in another_lr_parameters],
@@ -82,34 +104,45 @@ class RRGModel(BaseModel):
     def forward(self, **kwargs):
         src_input_ids, tgt_input_ids, pi_input_ids = kwargs.pop('src_input_ids'), kwargs.pop('tgt_input_ids', None), kwargs.pop('pi_input_ids', None)
         src_attention_mask, decoder_attention_mask, pi_attention_mask = kwargs.pop('src_attention_mask'), kwargs.pop('tgt_attention_mask'),kwargs.pop('pi_attention_mask')
-        bat_triple_idxs = kwargs.pop('bat_triple_idxs',None)
+        bat_triple_idxs = None
         
         decoder_input_ids = self.bart.prepare_decoder_input_ids_from_labels(tgt_input_ids)
         if self.config.model_type not in ['ph_bart']:
             outs = self.bart(src_input_ids, src_attention_mask,decoder_input_ids=decoder_input_ids, decoder_attention_mask= decoder_attention_mask, labels= None, pi_input_ids = pi_input_ids, pi_attention_mask=pi_attention_mask)
+            logits, logits2 = outs[0], outs[1]
+            kl_loss = 0
             
-        logits, logits2 = outs[0], outs[1]
+        else:
+            bat_triple_idxs = kwargs.pop('bat_triple_idxs',None)
+            outs = self.bart(src_input_ids, src_attention_mask,decoder_input_ids=decoder_input_ids, decoder_attention_mask= decoder_attention_mask, labels= None, pi_input_ids = pi_input_ids, pi_attention_mask=pi_attention_mask, bat_triple_idxs=bat_triple_idxs)
+            logits, logits2, kl_loss = outs[0], outs[1], outs[2]
+            
         
         # 计算损失值
         loss,loss2,nll_loss,ada_loss = self.calc_loss(logits, logits2, tgt_input_ids)
         
         generate_ids = None
         if not self.training and self.config.generate_in_eval:
-            generate_ids = self.generate(src_input_ids)
+            generate_ids = self.generate(src_input_ids,pi_input_ids,src_attention_mask,pi_attention_mask,bat_triple_idxs)
         num_words = self.record_state(logits, tgt_input_ids, loss if ada_loss is None else ada_loss, logits2, loss2, nll_loss, generate_ids)
-        
+        loss = loss / num_words + kl_loss
         forward_outs = {
-            'loss': loss / num_words, 
+            'loss': loss, 
             'logits': logits
         }
         if generate_ids is not None:
             forward_outs['generate_ids'] = generate_ids
         return forward_outs
 
-    def generate(self, src_input_ids):
+    def generate(self, src_input_ids, pi_input_ids,src_attention_mask,pi_attention_mask,bat_triple_idxs):
         generate_ids = self.bart.generate(src_input_ids, max_length=self.config.max_gen_length, 
                                           num_beams=self.config.num_beams,
-                                          do_sample=self.config.do_sample)
+                                          do_sample=self.config.do_sample,
+                                          pi_input_ids=pi_input_ids,
+                                          attention_mask=src_attention_mask,
+                                          pi_attention_mask=pi_attention_mask,
+                                          bat_triple_idxs = bat_triple_idxs
+                                          )
         
         return generate_ids
 
