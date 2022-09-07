@@ -2,9 +2,9 @@ import torch
 import torch.nn
 import torch.nn as nn
 import torch.nn.functional as F
+from transformers import BertModel, BertTokenizer
+from modules.nn.base_model import BaseModel, get_parameter_names
 from scripts.utils import get_tensor_device
-from transformers import BertModel
-
 
 class LayerNorm(nn.Module):
     "Construct a layernorm module (See citation for details)."
@@ -48,11 +48,12 @@ class RefiningStrategy(nn.Module):
 class GraphConvLayer(nn.Module):
     """ A GCN module operated on dependency graphs. """
 
-    def __init__(self, gcn_dim, edge_dim, dep_embed_dim, pooling='avg'):
+    def __init__(self, device, gcn_dim, edge_dim, dep_embed_dim, pooling='avg'):
         super(GraphConvLayer, self).__init__()
         self.gcn_dim = gcn_dim
         self.edge_dim = edge_dim
         self.dep_embed_dim = dep_embed_dim
+        self.device = device
         self.pooling = pooling
         self.layernorm = LayerNorm(self.gcn_dim)
         self.W = nn.Linear(self.gcn_dim, self.gcn_dim)
@@ -103,13 +104,12 @@ class Biaffine(nn.Module):
     def forward(self, input1, input2):
         batch_size, len1, dim1 = input1.size()
         batch_size, len2, dim2 = input2.size()
-        device = get_tensor_device(input1)
         if self.bias[0]:
-            ones = torch.ones(batch_size, len1, 1, device=device)
+            ones = torch.ones(batch_size, len1, 1).to(self.args.device)
             input1 = torch.cat((input1, ones), dim=2)
             dim1 += 1
         if self.bias[1]:
-            ones = torch.ones(batch_size, len2, 1, device=device)
+            ones = torch.ones(batch_size, len2, 1).to(self.args.device)
             input2 = torch.cat((input2, ones), dim=2)
             dim2 += 1
         affine = self.linear(input1)
@@ -122,39 +122,35 @@ class Biaffine(nn.Module):
 
 
 class EMCGCN(torch.nn.Module):
-    def __init__(self, args, post_size, deprel_size, postag_size, synpost_size, class_num):
+    def __init__(self, args):
         super(EMCGCN, self).__init__()
         self.args = args
-        self.class_num = class_num
-        self.bert = BertModel.from_pretrained(args.pretrain_model_path)
-        
+        self.bert = BertModel.from_pretrained(args.bert_model_path)
+        self.tokenizer = BertTokenizer.from_pretrained(args.bert_model_path)
         self.dropout_output = torch.nn.Dropout(args.emb_dropout)
-        self.post_emb = torch.nn.Embedding(post_size, class_num, padding_idx=0)
-        self.deprel_emb = torch.nn.Embedding(deprel_size, class_num, padding_idx=0)
-        self.postag_emb  = torch.nn.Embedding(postag_size, class_num, padding_idx=0)
-        self.synpost_emb = torch.nn.Embedding(synpost_size, class_num, padding_idx=0)
+
+        self.post_emb = torch.nn.Embedding(args.post_size, args.class_num, padding_idx=0)
+        self.deprel_emb = torch.nn.Embedding(args.deprel_size, args.class_num, padding_idx=0)
+        self.postag_emb  = torch.nn.Embedding(args.postag_size, args.class_num, padding_idx=0)
+        self.synpost_emb = torch.nn.Embedding(args.synpost_size, args.class_num, padding_idx=0)
         
-        self.triplet_biaffine = Biaffine(args, args.gcn_dim, args.gcn_dim, class_num, bias=(True, True))
+        self.triplet_biaffine = Biaffine(args, args.gcn_dim, args.gcn_dim, args.class_num, bias=(True, True))
         self.ap_fc = nn.Linear(args.bert_feature_dim, args.gcn_dim)
         self.op_fc = nn.Linear(args.bert_feature_dim, args.gcn_dim)
 
         self.dense = nn.Linear(args.bert_feature_dim, args.gcn_dim)
         self.num_layers = args.num_layers
         self.gcn_layers = nn.ModuleList()
-        
+
         self.layernorm = LayerNorm(args.bert_feature_dim)
 
         for i in range(self.num_layers):
             self.gcn_layers.append(
-                GraphConvLayer(args.gcn_dim, 5*class_num, class_num, args.pooling))
+                GraphConvLayer(args.device, args.gcn_dim, 5*args.class_num, args.class_num, args.pooling))
 
-    def forward(self, **kwargs):
-        tokens, masks, word_pair_position, word_pair_deprel, word_pair_pos, word_pair_synpost = \
-            kwargs.pop('input_ids'), kwargs.pop('attention_mask'), kwargs.pop('word_pair_position'), \
-            kwargs.pop('word_pair_deprel'), kwargs.pop('word_pair_pos'), kwargs.pop('word_pair_synpost')
+    def forward(self, tokens, masks, word_pair_position, word_pair_deprel, word_pair_pos, word_pair_synpost):
         features = self.bert(tokens, masks)
-        bert_feature = features.last_hidden_state
-        device = get_tensor_device(bert_feature)
+        bert_feature = features[0]
         bert_feature = self.dropout_output(bert_feature) 
 
         batch, seq = masks.shape
@@ -184,7 +180,7 @@ class EMCGCN(torch.nn.Module):
         self_loop = []
         for _ in range(batch):
             self_loop.append(torch.eye(seq))
-        self_loop = torch.stack(self_loop).to(device).unsqueeze(1).expand(batch, 5*self.class_num, seq, seq) * tensor_masks.permute(0, 3, 1, 2).contiguous()
+        self_loop = torch.stack(self_loop).to(self.args.device).unsqueeze(1).expand(batch, 5*self.args.class_num, seq, seq) * tensor_masks.permute(0, 3, 1, 2).contiguous()
         
         weight_prob = torch.cat([biaffine_edge, word_pair_post_emb, word_pair_deprel_emb, \
             word_pair_postag_emb, word_pair_synpost_emb], dim=-1)
@@ -194,32 +190,82 @@ class EMCGCN(torch.nn.Module):
         for _layer in range(self.num_layers):
             gcn_outputs, weight_prob = self.gcn_layers[_layer](weight_prob_softmax, weight_prob, gcn_outputs, self_loop)  # [batch, seq, dim]
             weight_prob_list.append(weight_prob)
-        
-        labels = kwargs.pop('labels')
-        loss = self.calc_loss(weight_prob_list, labels, kwargs.pop('labels_symmetry'))
-        
-        
-        return {'loss': loss, 'logits':weight_prob_list[-1]}
-    def calc_loss(self, weight_prob_list, labels, labels_symmetry):
-        weight = torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0], device = get_tensor_device(labels)).float()
-        tags_flatten = labels.reshape([-1])
-        tags_symmetry_flatten = labels_symmetry.reshape([-1])
-        biaffine_pred, post_pred, deprel_pred, postag, synpost, final_pred = weight_prob_list
-        l_ba = 0.10 * F.cross_entropy(biaffine_pred.reshape([-1, biaffine_pred.shape[3]]), tags_symmetry_flatten, ignore_index=-1)
-        l_rpd = 0.01 * F.cross_entropy(post_pred.reshape([-1, post_pred.shape[3]]), tags_symmetry_flatten, ignore_index=-1)
-        l_dep = 0.01 * F.cross_entropy(deprel_pred.reshape([-1, deprel_pred.shape[3]]), tags_symmetry_flatten, ignore_index=-1)
-        l_psc = 0.01 * F.cross_entropy(postag.reshape([-1, postag.shape[3]]), tags_symmetry_flatten, ignore_index=-1)
-        l_tbd = 0.01 * F.cross_entropy(synpost.reshape([-1, synpost.shape[3]]), tags_symmetry_flatten, ignore_index=-1)
 
-        if self.args.symmetry_decoding:
-            l_p = F.cross_entropy(final_pred.reshape([-1, final_pred.shape[3]]), tags_symmetry_flatten, weight=weight, ignore_index=-1)
+        return weight_prob_list
+
+class Extractor(BaseModel):
+    def __init__(self, config):
+        super().__init__(config)
+        self.model = EMCGCN(config)
+        
+    def forward(self, **kwargs):
+        tokens, masks, word_pair_position, word_pair_deprel, word_pair_pos, word_pair_synpost = \
+            kwargs.pop('tokens'), kwargs.pop('masks'), kwargs.pop('word_pair_position'), \
+            kwargs.pop('word_pair_deprel'), kwargs.pop('word_pair_pos'), kwargs.pop('word_pair_synpost')
+        tags, tags_symmetry = kwargs.pop('tags'), kwargs.pop('tags_symmetry')
+        tags_flatten = tags.reshape([-1])
+        tags_symmetry_flatten = tags_symmetry.reshape([-1])
+        # label = ['N', 'B-A', 'I-A', 'A', 'B-O', 'I-O', 'O', 'negative', 'neutral', 'positive']
+        weight = torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0],dtype=torch.float, device=get_tensor_device(tokens))
+        weight_prob_list = self.model(tokens, masks, word_pair_position, word_pair_deprel, word_pair_pos, word_pair_synpost)
+        if self.config.relation_constraint:
+            predictions = weight_prob_list
+            biaffine_pred, post_pred, deprel_pred, postag, synpost, final_pred = predictions[0], predictions[1], predictions[2], predictions[3], predictions[4], predictions[5]
+            l_ba = 0.10 * F.cross_entropy(biaffine_pred.reshape([-1, biaffine_pred.shape[3]]), tags_symmetry_flatten, ignore_index=-1)
+            l_rpd = 0.01 * F.cross_entropy(post_pred.reshape([-1, post_pred.shape[3]]), tags_symmetry_flatten, ignore_index=-1)
+            l_dep = 0.01 * F.cross_entropy(deprel_pred.reshape([-1, deprel_pred.shape[3]]), tags_symmetry_flatten, ignore_index=-1)
+            l_psc = 0.01 * F.cross_entropy(postag.reshape([-1, postag.shape[3]]), tags_symmetry_flatten, ignore_index=-1)
+            l_tbd = 0.01 * F.cross_entropy(synpost.reshape([-1, synpost.shape[3]]), tags_symmetry_flatten, ignore_index=-1)
+
+            if self.config.symmetry_decoding:
+                l_p = F.cross_entropy(final_pred.reshape([-1, final_pred.shape[3]]), tags_symmetry_flatten, weight=weight, ignore_index=-1)
+            else:
+                l_p = F.cross_entropy(final_pred.reshape([-1, final_pred.shape[3]]), tags_flatten, weight=weight, ignore_index=-1)
+
+            loss = l_ba + l_rpd + l_dep + l_psc + l_tbd + l_p
         else:
-            l_p = F.cross_entropy(final_pred.reshape([-1, final_pred.shape[3]]), tags_flatten, weight=weight, ignore_index=-1)
+            preds = weight_prob_list[-1]
+            preds_flatten = preds.reshape([-1, preds.shape[3]])
+            if self.config.symmetry_decoding:
+                loss = F.cross_entropy(preds_flatten, tags_symmetry_flatten, weight=weight, ignore_index=-1)
+            else:
+                loss = F.cross_entropy(preds_flatten, tags_flatten, weight=weight, ignore_index=-1)
 
-        loss = l_ba + l_rpd + l_dep + l_psc + l_tbd + l_p
-        
-        preds = F.softmax(weight_prob_list[-1], dim=-1)
-        preds = torch.argmax(preds, dim=3)
-        acc = torch.sum(preds==labels)/tags_flatten.shape[0]
-        print(acc)
-        return loss
+        return {'loss': loss, 'logits':weight_prob_list[-1]}
+    
+    
+    def optimizer_grouped_parameters(self, weight_decay):
+        """为模型参数设置不同的优化器超参，比如分层学习率等，此处默认为hf的初始化方式
+        """
+        total_parameters = get_parameter_names(self, [nn.LayerNorm])
+        decay_parameters = [name for name in total_parameters if "bias" not in name]
+        an_lr_keywords = []
+        another_lr_parameters = []
+        for name in total_parameters:
+            if 'bert' not in name:
+                another_lr_parameters.append(name)
+            for keyw in an_lr_keywords:
+                if keyw in name:
+                    another_lr_parameters.append(name)
+
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in self.named_parameters() if n in decay_parameters and n in another_lr_parameters],
+                "weight_decay": weight_decay,
+                "learing_rate": self.config.non_pretrain_lr
+            },
+            {
+                "params": [p for n, p in self.named_parameters() if n in decay_parameters and n not in another_lr_parameters],
+                "weight_decay": weight_decay 
+            },
+            {
+                "params": [p for n, p in self.named_parameters() if n not in decay_parameters and n in another_lr_parameters],
+                "weight_decay": 0.0,
+                "learing_rate": self.config.non_pretrain_lr
+            },
+            {
+                "params": [p for n, p in self.named_parameters() if n not in decay_parameters and n not in another_lr_parameters],
+                "weight_decay": 0.0
+            }
+        ]
+        return optimizer_grouped_parameters

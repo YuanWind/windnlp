@@ -34,8 +34,8 @@ def sort_dict(d, mode='k', reverse=False):
         logger.info('排序失败')
         return d
 
-def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
-    """检查GPU的空闲状态，设定判断阈值
+def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000, to_used=False):
+    """检查GPU的空闲状态，设定判断阈值，默认为5G。先找没人使用的GPU，如果全部GPU都有人用，则随机等待1~5分钟后找小于阈值的可用的GPU。
     Args:
         find_ours (float, optional): _description_. Defaults to 11.5.
         100*1000000 = 100 M
@@ -45,16 +45,17 @@ def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
     try:
         import pynvml
         import time
+        import random
         start = time.time()
         find_times = 0
         pynvml.nvmlInit()
         cnt = pynvml.nvmlDeviceGetCount()
-        logger.warning(f'Start to find the GPU device of using memory<{threshold_mem/1000000}M ...')
         while True:
+            time.sleep(5) 
             for i in range(cnt):
                 handle = pynvml.nvmlDeviceGetHandleByIndex(i)
                 info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-                if info.used < threshold_mem:  # 5G    
+                if info.used < 2*1000000:  # 2M    # 小于2M表示没人用
                     logger.warning(f'GPU-{i} used {info.used/1000000} M, so the program will use GPU-{i}.') 
                     return i
             cur_time = time.time()
@@ -66,7 +67,19 @@ def check_empty_gpu(find_ours=11.5, threshold_mem=5000*1000000):
             if find_times > find_ours: # 如果超过 find_ours 个小时还没有分配到GPU，则停止程序
                 logger.warning(f'已经经过{find_times}小时，还未找到可用的GPU，终止程序。')
                 exit()
-    except:
+            # 随机停止 1~5分钟后开始下一次寻找可用的GPU
+            random_time = random.randint(1,5)
+            logger.warning(f'当前无可用的GPU，{random_time}分钟后开始下一次寻找可用的GPU。')
+            time.sleep(random_time*60)
+            if to_used:
+                for i in range(cnt):
+                    handle = pynvml.nvmlDeviceGetHandleByIndex(i)
+                    info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                    if info.used < threshold_mem:  # 5G  # 小于5G表示虽然有人用，但是用的不多，我也能用
+                        logger.warning(f'GPU-{i} used {info.used/1000000} M, so the program will use GPU-{i}.') 
+                        return i
+    except Exception as e:
+        logger.warning(e)
         return 0
         
         
@@ -118,14 +131,26 @@ def load_pkl(f_name):
         return pickle.load(f)
 
 
-def dump_json(data, f_name):
-    with open(f_name, 'w', encoding='utf-8') as json_file:
-        json.dump(data, json_file, ensure_ascii=False, indent=4)
+def dump_json(data, f_name, jsonline = False):
+    if jsonline:
+        with open(f_name, 'w', encoding='utf-8') as json_file:
+            for d in data:
+                json_file.write(f'{json.dumps(d, ensure_ascii=False)}\n')
+    else:
+        with open(f_name, 'w', encoding='utf-8') as json_file:
+            json.dump(data, json_file, ensure_ascii=False, indent=4)
 
 
-def load_json(f_name):
-    with open(f_name, 'r', encoding='utf-8') as fr:
-        data = json.load(fr)
+def load_json(f_name, jsonline = False):
+    if jsonline:
+        data = []
+        with open(f_name, 'r', encoding='utf-8') as fr:
+            for line in fr:
+                line = line.strip()
+                data.append(json.loads(line))
+    else:
+        with open(f_name, 'r', encoding='utf-8') as fr:
+            data = json.load(fr)
     return data
 
 def set_to_orderedlist(set_obj):
@@ -336,7 +361,7 @@ def get_tensor_device(tensor):
         return 'cpu'
     
     
-def token_index2char_index(offsets):
+def token_index2char_index(offset_mapping):
     """根据token下标到单词下标的映射，推导单词对应的token位置
     TODO: 如果某个字符没有对应的token怎么办？
 
@@ -347,7 +372,7 @@ def token_index2char_index(offsets):
         dict: 单词对应的token位置
     """
     word_idx2token_idx = {}
-    for token_idx, word_pos in enumerate(offsets):
+    for token_idx, word_pos in enumerate(offset_mapping):
         s, t = word_pos # token 对应的 word 起始和结束位置
         if t-s == 0: # 特殊的token，无对应的字符
             continue

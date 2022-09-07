@@ -9,13 +9,16 @@
 import sys
 sys.path.extend(['../../','./','../'])
 import logging
-from modules.data.vocabs import ASTEVocab
+from modules.data.vocabs import BaseVocab, add_labels
 from scripts.utils import dump_pkl
 logger = logging.getLogger(__name__.replace('_', ''))
 
 
+
+
+
 def build_vocab(train_files, dev_files, test_files, vocab_file):
-    vocab = ASTEVocab()
+    vocab = RRGVocab()
     vocab.read_files(train_files, 'train')
     vocab.read_files(dev_files, 'dev')
     vocab.read_files(test_files, 'test')

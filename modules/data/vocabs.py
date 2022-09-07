@@ -7,29 +7,49 @@
 '''
 from collections import Counter, defaultdict
 import json
-from lib2to3.pytree import Base
 import logging
-from tkinter.filedialog import askopenfile
-from xml.dom import INDEX_SIZE_ERR
-
-from requests import post
+from tqdm import tqdm
 logger = logging.getLogger(__name__.replace('_', ''))
 from scripts.utils import load_json, load_pkl, set_to_orderedlist
+import jieba
+import pickle
 
+def add_labels(label_names=[]):
+    """装饰器，为类动态加入 {label_name}2id 和 id2{label_name} 属性。
+
+    Args:
+        label_names (list, optional): 待加入的label_names. Defaults to [].
+    """
+    
+    def set_class(vocab_class):
+        
+        class wrapper(vocab_class):
+            def __init__(self):
+                super().__init__()
+                for name in label_names:
+                    label2id = {'PAD':0, 'UNK':1}
+                    id2label = ['PAD', 'UNK']
+                    self.__setattr__(f'{name}2id', label2id)
+                    self.__setattr__(f'id2{name}', id2label)
+        return wrapper
+    return set_class
+            
 
 class BaseVocab:
-    def __init__(self):
+    def __init__(self, names = []):
         self.all_insts = []
         self.train_insts = []
         self.dev_insts = []
         self.test_insts = []
-        
-        self.label2id = {'PAD':0, 'UNK':1}
-        self.id2label = ['PAD', 'UNK']
-        
-    @property
-    def num_labels(self):
-        return len(self.id2label)
+        for name in names:
+            label2id = {'PAD':0, 'UNK':1}
+            id2label = ['PAD', 'UNK']
+            self.__setattr__(f'{name}2id', label2id)
+            self.__setattr__(f'id2{name}', id2label)
+
+    def get_label_num(self, name='labels'):
+        val = self.__getattribute__(f'id2{name}')
+        return len(val)
     
     def read_files(self, files, file_type = 'train'):
         """
@@ -53,93 +73,121 @@ class BaseVocab:
             file (str): 文件路径
             file_type (str, optional): ['train','dev','test']. Defaults to 'train'.
         """
-        raise NotImplementedError
+        if file_path[-3:] == 'pkl':
+            return load_pkl(file_path)
+        elif file_path[-3:] == 'son':
+            return load_json(file_path)
     
+    def set_labels(self, name, labels_set):
+        val = self.__getattribute__(f'id2{name}') 
+        val += set_to_orderedlist(labels_set)
+        self.__setattr__(f'id2{name}', val)
+        self.__setattr__(f'{name}2id', {v:idx for idx, v in enumerate(val)})
+        
     def build(self):
         """
         根据全部的insts构建vocab
         """
         raise NotImplementedError
+    
+class RRGVocab(BaseVocab):
+    def __init__(self, names = ['labels', 'aspect', 'sentiment']):
+        super().__init__(names)
+        self.token2aspect = {}
+        self.new_tokens = set()
+        
+    def build(self, aspect2tokens, build_new_vocabs=False):
+        aspect_set = set(aspect2tokens.keys())
+        self.set_labels('aspect', aspect_set)
+        self.set_labels('sentiment', {'正向','负向','中性'})
+        for k, vs in aspect2tokens.items():
+            for v in vs:
+                self.token2aspect[v] = k  
+        # 构建新的词表
+        if build_new_vocabs:
+            self.new_tokens.update({'正向','负向','中性'})
+            
+            words_counter = Counter()
+            for inst in tqdm(self.all_insts):
+                words = list(jieba.cut(inst['src']))+\
+                        list(jieba.cut(inst['tgt']))+\
+                        list(jieba.cut(' '.join(inst['triples'])))+\
+                        list(jieba.cut(inst['properties']))
+                words_counter.update(Counter(words))
+            self.new_tokens.update([i[0] for i in words_counter.most_common(15000)])
+            print(f'length of new_tokens: {len(self.new_tokens)}')
+
+@add_labels(['labels', 'aspect', 'sentiment'])
+class RRGVocab1(BaseVocab):
+    def __init__(self):
+        super().__init__()
+        self.token2aspect = {}
+        
+    def build(self, aspect2tokens):
+        aspect_set = set(aspect2tokens.keys())
+        self.set_labels('aspect', aspect_set)
+        
+        for k, vs in aspect2tokens.items():
+            for v in vs:
+                self.token2aspect[v] = k             
+
+
+class VocabHelp(object):
+    def __init__(self, counter, specials=['<pad>', '<unk>']):
+        self.pad_index = 0
+        self.unk_index = 1
+        counter = counter.copy()
+        self.itos = list(specials)
+        for tok in specials:
+            del counter[tok]
+        
+        # sort by frequency, then alphabetically
+        words_and_frequencies = sorted(counter.items(), key=lambda tup: tup[0])
+        words_and_frequencies.sort(key=lambda tup: tup[1], reverse=True)    # words_and_frequencies is a tuple
+
+        for word, freq in words_and_frequencies:
+            self.itos.append(word)
+
+        # stoi is simply a reverse dict for itos
+        self.stoi = {tok: i for i, tok in enumerate(self.itos)}
+
+    def __eq__(self, other):
+        if self.stoi != other.stoi:
+            return False
+        if self.itos != other.itos:
+            return False
+        return True
+
+    def __len__(self):
+        return len(self.itos)
+
+    def extend(self, v):
+        words = v.itos
+        for w in words:
+            if w not in self.stoi:
+                self.itos.append(w)
+                self.stoi[w] = len(self.itos) - 1
+        return self
+
+    @staticmethod
+    def load_vocab(vocab_path: str):
+        with open(vocab_path, "rb") as f:
+            return pickle.load(f)
+
+    def save_vocab(self, vocab_path):
+        with open(vocab_path, "wb") as f:
+            pickle.dump(self, f)
+
 
 class ASTEVocab(BaseVocab):
     def __init__(self):
         super().__init__() # Python 3 可以使用直接使用 super().xxx 代替 super(Class, self).xxx
-        self.postag2id = {'PAD':0, 'UNK':1}
-        self.id2postag = ['PAD', 'UNK']
-        
-        self.deprel2id = {'PAD':0, 'UNK':1, 'self':2}
-        self.id2deprel = ['PAD', 'UNK', 'self']
-        
-        self.id2label = ['PAD', 'UNK'] + set_to_orderedlist(
-            set(['N', 'B-A', 'I-A', 'A', 'B-O', 'I-O', 'O', 'negative', 'neutral', 'positive'])
-            )
-        self.label2id = {v:idx for idx,v in enumerate(self.id2label)}
-
-        # 位置
-        self.post2id = {'PAD':0, 'UNK':1}
-        self.id2post = ['PAD', 'UNK']
-                
-        self.syn_post2id = {'PAD':0, 'UNK':1}
-        self.id2syn_post = ['PAD', 'UNK']
-        
-        self.aspects = defaultdict(int)
-    @property
-    def num_postag(self):
-        return len(self.id2postag)
-    
-    @property
-    def num_deprel(self):
-        return len(self.id2deprel)
-    
-    @property
-    def num_post(self):
-        return len(self.id2post)
-    
-    @property
-    def num_syn_post(self):
-        return len(self.id2syn_post)
         
     def read_file(self, file_path):
         data = load_json(file_path)
         print(f'Read {len(data)} data from {file_path}')
         return data
         
-
-    def build(self):
-        postag_set = set()
-        deprel_set = set()
-        postag_ca = set()
-        for inst in self.all_insts:
-            postag_ca = postag_ca | set(inst['postag'])
-            n = len(inst['postag'])
-            tmp_pos = []
-            for i in range(n):
-                for j in range(n):
-                    tup = tuple(sorted([inst['postag'][i], inst['postag'][j]]))
-                    tmp_pos.append(tup)
-            postag_set = postag_set | set(tmp_pos)
-            deprel_set = deprel_set | set(inst['deprel'])
-            for triple in inst['triples']:
-                if 'aspect' in triple:
-                    self.aspects[triple['aspect']] += 1
-                    
-        self.id2postag += set_to_orderedlist(postag_set)
-        self.postag2id = {v:idx for idx, v in enumerate(self.id2postag)}
-        
-        self.id2deprel += set_to_orderedlist(deprel_set)
-        self.deprel2id = {v:idx for idx, v in enumerate(self.id2deprel)}
-        
-        self.id2post += list(range(128))
-        self.post2id = {v:idx for idx, v in enumerate(self.id2post)}
-        
-        self.id2syn_post += list(range(5))
-        self.syn_post2id = {v:idx for idx, v in enumerate(self.id2syn_post)}
-        
-        print(f'Labels to ID:\n{self.id2label}')
-        print(f'Postag to ID:\n{self.id2postag}')
-        print(f'Deprel to ID:\n{self.id2deprel}')
-        print(f'Aspect info:\n{self.aspects}')
-        print(f'Max length :{self.id2post}; Syn_post: 5')
 
 class TokenVocab(BaseVocab):
     def __init__(self):
